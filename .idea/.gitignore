@@ -1,0 +1,38 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+
+# Ignore Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environments
+venv/
+env/
+*.env
+.Python
+
+# Ignore IDE specific files
+.idea/
+
+# Ignore system files
+.DS_Store         # macOS
+Thumbs.db         # Windows
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+*.bak
+*.swp
+
+# Ignore coverage files
+.coverage
+*.cover
+
+# Ignore test result files
+nosetests.xml
+pytest-debug.log
+test_*.xml

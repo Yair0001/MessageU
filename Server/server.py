@@ -2,6 +2,9 @@ import utils
 import socket
 from _thread import *
 import threading
+from Server.protocol import ClientReq
+import constants as const
+import struct
 
 lock = threading.Lock()
 
@@ -13,12 +16,31 @@ def new_client(client):
             lock.release()
             break
 
-        client.send(data)
+        client_req = ClientReq(data)
+        req_code = int.from_bytes(client_req.get_code(), byteorder=const.ENDIAN)
+
+        if req_code == const.REGISTER_CODE:
+            return_signal = client_req.register_req()
+            if return_signal == const.ERROR_USERNAME_EXISTS:
+                print("USERNAME ALREADY EXISTS")
+                #Return to client using struct
+            elif return_signal == const.OK:
+                print("ADDED USERNAME")
+                #Return to client using struct
+
+        elif req_code == const.CLIENTS_LIST_CODE:
+            pass
+        elif req_code == const.CLIENT_PUB_KEY_CODE:
+            pass
+        elif req_code == const.SEND_MSG_CODE:
+            pass
+        elif req_code == const.WAITING_MESSAGES_CODE:
+            pass
+
     client.close()
 
 def main():
-    FILE_NAME = "myport.info"
-    port = utils.read_port(FILE_NAME)
+    port = utils.read_port(const.FILE_NAME)
 
     sock = utils.set_up_server(port)
 

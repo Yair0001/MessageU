@@ -1,12 +1,13 @@
 import sqlite3
 from datetime import datetime as dt
-DATABASE_NAME = "defensive.db"
+import constants as const
 
 class DefensiveDb:
     def __init__(self):
-        db = sqlite3.connect(DATABASE_NAME)
+        db = sqlite3.connect(const.DATABASE_NAME)
         self._cur = db.cursor()
         self._cid = 0
+        self.create_tables()
 
     def create_tables(self):
         self._cur.execute("CREATE TABLE clients(ID, UserName, PublicKey, LastSeen")

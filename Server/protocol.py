@@ -1,3 +1,5 @@
+import sqlite3
+import dbInit
 
 CLIENT_ID_SIZE = 16
 VERSION_SIZE = 1

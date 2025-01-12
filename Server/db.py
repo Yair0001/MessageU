@@ -1,17 +1,27 @@
 import sqlite3
 from datetime import datetime as dt
 import constants as const
+import struct
+import utils
 
 class DefensiveDb:
     def __init__(self):
         db = sqlite3.connect(const.DATABASE_NAME)
         self._cur = db.cursor()
-        self._cid = 0
+        self._usr_count = 0
+        self._clients_list = b""
         self.create_tables()
 
     def create_tables(self):
-        self._cur.execute("CREATE TABLE clients(ID, UserName, PublicKey, LastSeen")
-        self._cur.execute("CREATE TABLE messages(ID, ToClient, FromClient, Type, Content")
+        self._cur.execute("CREATE TABLE IF NOT EXISTS clients(ID, UserName, PublicKey, LastSeen")
+        self._cur.execute("CREATE TABLE IF NOT EXISTS messages(ID, ToClient, FromClient, Type, Content")
+
+    def get_top_msg_by_cid(self,to_cid):
+        res = self._cur.execute(f"SELECT FromClient,ID,Type,Content FROM message WHERE FromClient={to_cid}")
+        if res.fetchone() is None:
+            return const.ERROR_NO_WAITING_MSGS
+        else:
+            return res.fetchone()
 
     def is_username_in_table(self, user_name):
         res = self._cur.execute(f"SELECT UserName FROM clients WHERE UserName={user_name}")
@@ -22,13 +32,23 @@ class DefensiveDb:
         return not(res.fetchone() is None)
 
     def insert_new_user(self,user_name,public_key):
-        #create new unique id in length 16 bytes
+        cid = utils.generate_user_id(user_name)
+        user_name_packed = struct.pack("!s", user_name)
+
+        if self._usr_count == 0:
+            self._clients_list = cid + user_name_packed
+        else:
+            self._clients_list += cid + user_name_packed
+
         self._cur.execute(f"""
         INSERT INTO client
-        VALUES({str(self._cid)},{user_name},{public_key},{dt.now()})
+        VALUES({str(self._usr_count)},{user_name},{public_key},{dt.now()})
         """)
-        self._cid += 1
-        return self._cid-1
+
+        self._usr_count += 1
+        return cid
+
+    def get_clients_list(self): return self._clients_list
 
     def add_new_message(self,cid,other_cid,msg_type,content):
         #create new unique msg_id in length 4 bytes

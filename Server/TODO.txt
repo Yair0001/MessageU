@@ -1,0 +1,1 @@
+1. Want to refactor all of ClientReq class to use struct.pack

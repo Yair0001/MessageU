@@ -2,7 +2,7 @@ import utils
 import socket
 from _thread import *
 import threading
-from Server.protocol import ClientReq
+from protocol import ClientReq
 import constants as const
 import struct
 

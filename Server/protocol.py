@@ -1,6 +1,5 @@
-import dbInit
 import constants as const
-from Server.dbInit import DefensiveDb
+from dbInit import DefensiveDb
 
 
 class ClientReq:

@@ -20,20 +20,30 @@ def new_client(client):
         req_code = int.from_bytes(client_req.get_code(), byteorder=const.ENDIAN)
 
         if req_code == const.REGISTER_CODE:
-            return_signal = client_req.register_req()
-            if return_signal == const.ERROR_USERNAME_EXISTS:
+            cid = client_req.register_req()
+            if cid == const.ERROR_USERNAME_EXISTS:
                 print("USERNAME ALREADY EXISTS")
                 #Return to client using struct
-            elif return_signal == const.OK:
+            else:
                 print("ADDED USERNAME")
-                #Return to client using struct
+                #Return cid to client using struct
 
         elif req_code == const.CLIENTS_LIST_CODE:
             pass
         elif req_code == const.CLIENT_PUB_KEY_CODE:
-            pass
+            pub_key = client_req.pub_key_req()
+            if pub_key == const.ERROR_CID_NOT_EXISTS:
+                print("CID DOES NOT EXIST")
+                #Return to client
+            else:
+                print("Public key: ", pub_key)
+                #Return public key and cid using struct
+
         elif req_code == const.SEND_MSG_CODE:
-            pass
+            msg_id = client_req.send_msg_req()
+            print("Message ID: ", msg_id)
+            #Return cid and msg_id to client
+
         elif req_code == const.WAITING_MESSAGES_CODE:
             pass
 

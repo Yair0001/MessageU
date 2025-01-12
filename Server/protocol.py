@@ -1,5 +1,6 @@
+import dbInit
 import constants as const
-from db import DefensiveDb
+from Server.dbInit import DefensiveDb
 
 
 class ClientReq:
@@ -53,32 +54,8 @@ class ClientReq:
         self.set_username(usr_name)
         pub_key = self._payload[const.USERNAME_LENGTH:]
         self.set_public_key(pub_key)
-        return self._db.insert_new_user(self._username,self._public_key)
-
-    def pub_key_req(self):
-        other_cid = self._payload
-        does_exist = self._db.is_cid_in_table(other_cid)
-        if not does_exist:
-            return const.ERROR_CID_NOT_EXISTS
-
-        other_pub_key = self._db.get_pub_key_of_cid(other_cid)
-        return other_pub_key
-
-    def send_msg_req(self):
-        curr_offset = 0
-        other_cid = self._payload[curr_offset:const.CLIENT_ID_SIZE]
-        curr_offset += const.CLIENT_ID_SIZE
-
-        self.set_msg_type(self._payload[curr_offset:curr_offset+const.MSG_TYPE_SIZE])
-        curr_offset += const.MSG_TYPE_SIZE
-
-        self.set_content_size(self._payload[curr_offset:curr_offset+const.CONTENT_SZ_SIZE])
-        curr_offset += const.CONTENT_SZ_SIZE
-
-        self.set_msg_content(self._payload[curr_offset:])
-
-        return self._db.add_new_message(self.get_client_id(),other_cid,self.get_msg_type(),self.get_msg_content())
-
+        self._db.insert_new_user(self._username,self._public_key)
+        return const.OK
 
 if __name__ == "__main__":
     pass

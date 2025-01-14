@@ -6,7 +6,7 @@
 #include <fstream>
 
 #define CLIENT_VERSION 2
-#define SERVER_INFO_FILE "Client/server.info"
+#define SERVER_INFO_FILE "../server.info"
 
 enum ProtocolSizes{
     CLIENT_ID_SIZE = 16,

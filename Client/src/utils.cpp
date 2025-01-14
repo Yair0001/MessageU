@@ -16,11 +16,11 @@ std::vector<std::string> splitString(const std::string& s, char del) {
 
 std::vector<std::string> readServerInfo(const std::string& path) {
     std::fstream file(path);
-
+    std::vector<std::string> result;
     if (file.is_open()) {
         const auto fileContent = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-        std::vector<std::string> result = splitString(fileContent, ':');
+        result = splitString(fileContent, ':');
         return result;
     }
-    throw std::runtime_error("Failed to open file " + path);
+    return result;
 }

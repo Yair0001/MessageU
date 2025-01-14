@@ -1,8 +1,16 @@
 #include <iostream>
 #include "utils.h"
+#include "parseCmd.h"
 
 int main() {
     std::string cmd;
+    const std::vector<std::string> serverInfo = readServerInfo(SERVER_INFO_FILE);
+
+    if (serverInfo.empty()) {
+        std::cerr << "\nError reading server info\n";
+        exit(EXIT_SUCCESS);
+    }
+
     while (cmd != "exit") {
         std::cout << "MessageU client at your service.\n\n";
         std::cout << "110) Register\n";
@@ -15,9 +23,10 @@ int main() {
         std::cout << "153) Send a file\n";
         std::cout << "0) Exit client\n";
         std::cout << "? ";
-        std::vector<std::string> serverInfo = readServerInfo(SERVER_INFO_FILE);
-        std::cout << serverInfo[0] << "\n" << serverInfo[1] << "\n";
+
         std::cin >> cmd;
+        ClientCmd client = ClientCmd(cmd);
+
 
     }
 

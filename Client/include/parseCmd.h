@@ -14,7 +14,7 @@ private:
     std::vector<CryptoPP::byte> _payload;
 public:
     ClientCmd(const std::string& command);
-
+    std::vector<CryptoPP::byte> parseCommand();
 
 };
 

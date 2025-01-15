@@ -20,7 +20,9 @@ add_executable(Client src/client.cpp
         src/utils.cpp
         include/utils.h
         src/parseCmd.cpp
-        include/parseCmd.h)
+        include/parseCmd.h
+        src/ServerHandler.cpp
+        include/ServerHandler.h)
 
 target_include_directories(Client PRIVATE "${CMAKE_SOURCE_DIR}\\include")
 

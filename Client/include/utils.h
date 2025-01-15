@@ -9,7 +9,7 @@
 #define SERVER_INFO_FILE "../server.info"
 
 enum ProtocolSizes{
-    CLIENT_ID_SIZE = 16,
+    CLIENT_ID_SIZE=16,
     VERSION_SIZE=1,
     CODE_SIZE=2,
     PAYLOAD_SZ_SIZE=4,
@@ -17,6 +17,14 @@ enum ProtocolSizes{
     PUBLIC_KEY_SIZE=160,
     MSG_TYPE_SIZE=1,
     MSG_CONTENT_SIZE=4,
+};
+
+enum RequestCodes {
+    REGISTER_CODE=600,
+    CLIENTS_LIST_CODE=601,
+    PUBLIC_KEY_CODE=602,
+    SEND_MSG_CODE=603,
+    WAITING_LIST_CODE=604,
 };
 
 

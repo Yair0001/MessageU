@@ -2,6 +2,10 @@
 #include "utils.h"
 #include "parseCmd.h"
 
+bool checkErrors(std::vector<CryptoPP::byte> retValue) {
+
+}
+
 int main() {
     std::string cmd;
     const std::vector<std::string> serverInfo = readServerInfo(SERVER_INFO_FILE);
@@ -11,7 +15,7 @@ int main() {
         exit(EXIT_SUCCESS);
     }
 
-    while (cmd != "exit") {
+    while (cmd != "0") {
         std::cout << "MessageU client at your service.\n\n";
         std::cout << "110) Register\n";
         std::cout << "120) Request for clients list\n";
@@ -25,9 +29,11 @@ int main() {
         std::cout << "? ";
 
         std::cin >> cmd;
-        ClientCmd client = ClientCmd(cmd);
-
+        ClientCmd client = ClientCmd();
+        std::vector<CryptoPP::byte> retValue = client.parseCommand(cmd);
+        if (checkErrors(client));
 
     }
+
 
 }

@@ -4,6 +4,7 @@
 #include <cryptopp/cryptlib.h>
 #include <vector>
 #include "utils.h"
+#include <fstream>
 
 class ClientCmd {
 private:
@@ -12,9 +13,18 @@ private:
     std::vector<CryptoPP::byte> _code;
     std::vector<CryptoPP::byte> _payloadSize;
     std::vector<CryptoPP::byte> _payload;
+    std::vector<CryptoPP::byte> _userName;
+    std::vector<CryptoPP::byte> _pubKey;
+    std::vector<CryptoPP::byte> _msgType;
+    std::vector<CryptoPP::byte> _contentSize;
+    std::vector<CryptoPP::byte> _msgContent;
+    std::vector<CryptoPP::byte> _otherCid;
+
 public:
-    ClientCmd(const std::string& command);
-    std::vector<CryptoPP::byte> parseCommand();
+    explicit ClientCmd();
+    std::vector<CryptoPP::byte> parseCommand(const std::string& command);
+    std::vector<CryptoPP::byte> registerUser();
+    ~ClientCmd() = default;
 
 };
 

@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-std::vector<std::string> splitString(const std::string& s, char del) {
+std::vector<std::string> splitString(const std::string& s, const char del) {
     std::vector<std::string> result;
     std::string::size_type start = 0;
     std::string::size_type end = 0;

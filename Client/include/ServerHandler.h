@@ -5,5 +5,15 @@
 #ifndef SERVERHANDLER_H
 #define SERVERHANDLER_H
 
+#include <boost/asio.hpp>
 
+class ServerHandler {
+private:
+
+public:
+    ServerHandler();
+    void startConnection();
+    void sendToServer();
+    ~ServerHandler();
+};
 #endif //SERVERHANDLER_H

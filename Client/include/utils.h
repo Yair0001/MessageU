@@ -19,6 +19,11 @@ enum ProtocolSizes{
     MSG_CONTENT_SIZE=4,
 };
 
+enum ErrorCodes{
+    EXIT=0x00,
+    REGISTER_ERROR=0x01,
+};
+
 enum RequestCodes {
     REGISTER_CODE=600,
     CLIENTS_LIST_CODE=601,

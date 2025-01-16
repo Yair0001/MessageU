@@ -1,5 +1,7 @@
 #include "parseCmd.h"
 
+#include <iostream>
+
 ClientCmd::ClientCmd() {
         _cid.resize(CLIENT_ID_SIZE);
         _version.resize(VERSION_SIZE);
@@ -47,7 +49,7 @@ std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string& command) 
                 _contentSize.resize(MSG_CONTENT_SIZE);
                 break;
             case "0":
-                _code = {0x00,0x00};
+                _code = {EXIT,EXIT};
                 break;
             default:
                 _code = {0x00,0xff};
@@ -55,10 +57,23 @@ std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string& command) 
         }
     }
 
-std::vector<CryptoPP::byte> registerUser() {
+std::vector<CryptoPP::byte> ClientCmd::registerUser() {
     std::ifstream userFile("my.info");
-    std::vector<CryptoPP::byte> serverAnswer;
     if (userFile.is_open()) {
-        return
+        return {REGISTER_ERROR};
+    }
+
+    std::string userName;
+
+    std::cout << "Enter Username: ";
+    std::cin >> userName;
+    _userName.resize(NAME_SIZE);
+    for (int i = 0; i < NAME_SIZE; i++) {
+        if (userName[i] == '\0') {
+            _userName[i] = userName[i];
+        }
+        else {
+            userName[i] = '\0';
+        }
     }
 }

@@ -1,6 +1,5 @@
 #include "RSAWrapper.h"
 
-
 RSAPublicWrapper::RSAPublicWrapper(const char* key, unsigned int length)
 {
 	CryptoPP::StringSource ss(reinterpret_cast<const CryptoPP::byte*>(key), length, true);

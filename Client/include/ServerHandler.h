@@ -11,7 +11,7 @@ class ServerHandler {
 private:
 
 public:
-    ServerHandler();
+    ServerHandler(std::string ip, int port);
     void startConnection();
     void sendToServer();
     ~ServerHandler();

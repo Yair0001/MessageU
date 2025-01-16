@@ -1,8 +1,7 @@
 #pragma once
 
-#include <osrng.h>
-#include <rsa.h>
-
+#include <cryptopp/osrng.h>
+#include <cryptopp/rsa.h>
 #include <string>
 
 
@@ -20,7 +19,6 @@ private:
 	RSAPublicWrapper(const RSAPublicWrapper& rsapublic);
 	RSAPublicWrapper& operator=(const RSAPublicWrapper& rsapublic);
 public:
-
 	RSAPublicWrapper(const char* key, unsigned int length);
 	RSAPublicWrapper(const std::string& key);
 	~RSAPublicWrapper();

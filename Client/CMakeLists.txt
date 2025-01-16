@@ -45,6 +45,9 @@ else()
     message(FATAL_ERROR "boost not found!")
 endif()
 
+if(WIN32)
+    target_link_libraries(Client PRIVATE ws2_32)
+endif()
 
 # Enable verbose output for debugging
 set(CMAKE_VERBOSE_MAKEFILE ON)

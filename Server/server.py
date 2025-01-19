@@ -28,7 +28,8 @@ def new_client(client):
             cid = client_req.register_req()
             if cid == const.ERROR_USERNAME_EXISTS:
                 print("USERNAME ALREADY EXISTS")
-                error_code = struct.pack("!h",const.ERROR_SERVER)
+                client_version = struct.pack("!i", const.VERSION_SIZE)
+                error_code = struct.pack("!h",const.ERROR_SERVER) + client_version
                 client.send(error_code)
             else:
                 print("ADDED USERNAME")

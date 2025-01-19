@@ -1,13 +1,14 @@
 #include "parseCmd.h"
-#include <iostream>
 
-ClientCmd::ClientCmd() {
-        _cid.resize(CLIENT_ID_SIZE);
-        _version.resize(VERSION_SIZE);
-        _code.resize(CODE_SIZE);
-        _payloadSize.resize(PAYLOAD_SZ_SIZE);
-        _version[0] = {static_cast<CryptoPP::byte>(CLIENT_VERSION)};
-    }
+ClientCmd::ClientCmd(ServerHandler& serverHandler)
+    : _serverHandler(serverHandler.getIp(),serverHandler.getPort())
+{
+    _cid.resize(CLIENT_ID_SIZE);
+    _version.resize(VERSION_SIZE);
+    _code.resize(CODE_SIZE);
+    _payloadSize.resize(PAYLOAD_SZ_SIZE);
+    _version = {static_cast<CryptoPP::byte>(CLIENT_VERSION)};
+}
 
 std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string& command) {
         int payloadSize = NAME_SIZE+1+PUBLIC_KEY_SIZE;
@@ -19,23 +20,43 @@ std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string& command) 
                 _version[0] = {static_cast<CryptoPP::byte>(CLIENT_VERSION)};
                 _code = {(REGISTER_CODE >> 8) & 0xff, REGISTER_CODE & 0xff};
                 payloadSize = NAME_SIZE+1 +PUBLIC_KEY_SIZE;
-                _payloadSize = {(payloadSize >> 24) & 0xff, (payloadSize >> 16) & 0xff, (payloadSize>> 8) & 0xff, payloadSize & 0xff};
+                _payloadSize = {
+                extractByte(payloadSize, 3),
+                extractByte(payloadSize, 2),
+                extractByte(payloadSize, 1),
+                extractByte(payloadSize, 0)
+                };
                 return registerUser();
             case 120:
                 _code = {(CLIENTS_LIST_CODE >> 8) & 0xff, CLIENTS_LIST_CODE & 0xff};
                 payloadSize = 0;
-                _payloadSize = {(payloadSize >> 24) & 0xff, (payloadSize >> 16) & 0xff, (payloadSize>> 8) & 0xff, payloadSize & 0xff};
+                _payloadSize = {
+                extractByte(payloadSize, 3),
+                extractByte(payloadSize, 2),
+                extractByte(payloadSize, 1),
+                extractByte(payloadSize, 0)
+                };
                 break;
             case 130:
                 _code = {(PUBLIC_KEY_CODE >> 8) & 0xff, PUBLIC_KEY_CODE & 0xff};
                 payloadSize = CLIENT_ID_SIZE;
-                _payloadSize = {(payloadSize >> 24) & 0xff, (payloadSize >> 16) & 0xff, (payloadSize>> 8) & 0xff, payloadSize & 0xff};
+                _payloadSize = {
+                extractByte(payloadSize, 3),
+                extractByte(payloadSize, 2),
+                extractByte(payloadSize, 1),
+                extractByte(payloadSize, 0)
+                };
                 _otherCid.resize(CLIENT_ID_SIZE);
                 break;
             case 140:
                 _code = {(WAITING_LIST_CODE >> 8) & 0xff, WAITING_LIST_CODE & 0xff};
                 payloadSize = 0;
-                _payloadSize = {(payloadSize >> 24) & 0xff, (payloadSize >> 16) & 0xff, (payloadSize>> 8) & 0xff, payloadSize & 0xff};
+                _payloadSize = {
+                extractByte(payloadSize, 3),
+                extractByte(payloadSize, 2),
+                extractByte(payloadSize, 1),
+                extractByte(payloadSize, 0)
+                };
                 break;
             case 150:
             case 151:
@@ -57,7 +78,7 @@ std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string& command) 
     }
 
 std::vector<CryptoPP::byte> ClientCmd::registerUser() {
-    std::ifstream userFile("my.info");
+    std::ifstream userFile(INFO_FILE_NAME);
     if (userFile.is_open()) {
         return {REGISTER_ERROR};
     }
@@ -83,11 +104,31 @@ std::vector<CryptoPP::byte> ClientCmd::registerUser() {
     }
 
     // generate pub and private keys
-    RSAPrivateWrapper priv;
-    std::string pubKeyStr = priv.getPublicKey();
+    RSAPrivateWrapper rsa_private_wrapper;
+    std::string pubKeyStr = rsa_private_wrapper.getPublicKey();
 
     for (int i = 0; i < PUBLIC_KEY_SIZE; i++) {
         _publicKey[i] = pubKeyStr[i];
     }
 
+    std::vector<CryptoPP::byte> msgToSend{};
+    mergeVector<CryptoPP::byte>(msgToSend, _cid,_version, _code, _payloadSize, _userName, _publicKey);
+    _serverHandler.sendMessage(msgToSend);
+    ServerMsg msgToReceive = ServerMsg(_serverHandler.receiveMessage());
+    if (msgToReceive.getCode() == SERVER_ERROR) {
+        return {SERVER_ERROR >> 8 & 0xff, SERVER_ERROR & 0xff};
+    }
+
+    std::ofstream infoFile(INFO_FILE_NAME);
+    if (infoFile.is_open()) {
+        infoFile << bytesToString(_userName) << '\n';
+        infoFile << bytesToString(msgToReceive.getPayload()) << '\n';
+        Base64Wrapper b64;
+        infoFile << b64.encode(rsa_private_wrapper.getPublicKey());
+        return {OK};
+    }
+    else {
+        std::cout << "Error while writing to file" << std::endl;
+        return {SERVER_ERROR >> 8 & 0xff, SERVER_ERROR & 0xff};
+    }
 }

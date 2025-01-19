@@ -2,8 +2,11 @@
 #include "utils.h"
 #include "parseCmd.h"
 
-bool checkErrors(std::vector<CryptoPP::byte> retValue) {
-    return true;
+bool errorsExist(ServerMsg& ans) {
+    if (ServerMsg::isValidCode(ans.getCode()) == false) {
+        return true;
+    }
+    return false;
 }
 
 int main() {
@@ -14,7 +17,8 @@ int main() {
     }
 
     std::string cmd;
-    ClientCmd client = ClientCmd();
+    ServerHandler server_handler(serverInfo[0],std::stoi(serverInfo[1]));
+    ClientCmd client(server_handler);
     while (cmd != "0") {
         std::cout << "MessageU client at your service.\n\n";
         std::cout << "110) Register\n";
@@ -29,9 +33,12 @@ int main() {
         std::cout << "? ";
 
         std::cin >> cmd;
-        std::vector<CryptoPP::byte> retValue = client.parseCommand(cmd);
-        // if (checkErrors(client));
 
+        std::vector<CryptoPP::byte> retValue = client.parseCommand(cmd);
+        ServerMsg ans(retValue);
+        if (errorsExist(ans)) {
+            std::cerr << "\nServer responded with error\n";
+        }
     }
 
 

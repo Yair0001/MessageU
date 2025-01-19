@@ -24,3 +24,31 @@ std::vector<std::string> readServerInfo(const std::string& path) {
     }
     return result;
 }
+
+template <typename T, typename... Args>
+void mergeVector(const std::vector<T>& res, const std::vector<T>& vec1, const Args&... rest) {
+    res.insert(res.end(), vec1.begin(), vec1.end());
+    if (sizeof...(rest) > 0) {
+        mergeVector(res, rest...);
+    }
+}
+
+std::string bytesToString(std::vector<CryptoPP::byte> bytes) {
+    std::string result;
+    for (int i = 0; i < bytes.size(); i++) {
+        result += std::to_string(bytes[i]);
+    }
+    return result;
+}
+
+int sumVector(const std::vector<CryptoPP::byte>& bytes) {
+    int result = 0;
+    for (int i = 0; i < bytes.size(); i++) {
+        result += bytes[i];
+    }
+    return result;
+}
+
+unsigned char extractByte(const int value, const int byteIndex) {
+    return static_cast<unsigned char>((value >> (byteIndex * 8)) & 0xff);
+}

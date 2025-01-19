@@ -7,11 +7,14 @@
 #include "utils.h"
 #include <fstream>
 #include "ServerHandler.h"
+#include "ServerMsg.h"
+#include <iostream>
+#include <Base64Wrapper.h>
 
 class ClientCmd {
 private:
 
-    ServerHandler *serverHandler;
+    ServerHandler _serverHandler;
 
     std::vector<CryptoPP::byte> _cid;
     std::vector<CryptoPP::byte> _version;
@@ -28,7 +31,7 @@ private:
     std::vector<CryptoPP::byte> _privateKey;
 
 public:
-    explicit ClientCmd();
+    explicit ClientCmd(ServerHandler& serverHandler);
     std::vector<CryptoPP::byte> parseCommand(const std::string& command);
     std::vector<CryptoPP::byte> registerUser();
     ~ClientCmd() = default;

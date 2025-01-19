@@ -1,4 +1,3 @@
-ENDIAN = "little"
 FILE_NAME = "myport.info"
 DATABASE_NAME = "defensive.db"
 

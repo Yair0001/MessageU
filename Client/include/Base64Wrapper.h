@@ -3,7 +3,6 @@
 #include <string>
 #include <cryptopp/base64.h>
 
-
 class Base64Wrapper
 {
 public:

@@ -4,9 +4,13 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <cryptopp/trap.h>
 
 #define CLIENT_VERSION 2
+#define INFO_FILE_NAME "my.info"
 #define SERVER_INFO_FILE "../server.info"
+
+#define BYTES_TILL_PAYLOAD 7
 
 enum ProtocolSizes{
     CLIENT_ID_SIZE=16,
@@ -21,7 +25,9 @@ enum ProtocolSizes{
 
 enum ErrorCodes{
     EXIT=0x00,
+    OK=0xFF,
     REGISTER_ERROR=0x01,
+    SERVER_ERROR=9000,
 };
 
 enum RequestCodes {
@@ -32,8 +38,22 @@ enum RequestCodes {
     WAITING_LIST_CODE=604,
 };
 
+enum AnswerCodes {
+    REGISTER_OK=2100,
+    CLIENTS_LIST_OK=2101,
+    PUBLIC_KEY_OK=2102,
+    SEND_MSG_OK=2103,
+    WAITING_LIST_OK=2104,
+};
+
 
 std::vector<std::string> splitString(const std::string& s, char del);
 std::vector<std::string> readServerInfo(const std::string& path);
+std::string bytesToString(std::vector<CryptoPP::byte> bytes);
+int sumVector(const std::vector<CryptoPP::byte>& bytes);
+unsigned char extractByte(int value, int byteIndex);
+
+template <typename T, typename... Args>
+void mergeVector(const std::vector<T>& res, const std::vector<T>& vec1, const Args&... rest);
 
 #endif //UTILS_H

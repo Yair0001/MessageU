@@ -25,15 +25,9 @@ std::vector<std::string> readServerInfo(const std::string& path) {
     return result;
 }
 
-template <typename T, typename... Args>
-void mergeVector(const std::vector<T>& res, const std::vector<T>& vec1, const Args&... rest) {
-    res.insert(res.end(), vec1.begin(), vec1.end());
-    if (sizeof...(rest) > 0) {
-        mergeVector(res, rest...);
-    }
-}
 
-std::string bytesToString(std::vector<CryptoPP::byte> bytes) {
+
+std::string bytesToString(const std::vector<CryptoPP::byte> &bytes) {
     std::string result;
     for (int i = 0; i < bytes.size(); i++) {
         result += std::to_string(bytes[i]);

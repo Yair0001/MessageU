@@ -5,6 +5,7 @@
 #include <vector>
 #include <fstream>
 #include <cryptopp/trap.h>
+#include <iostream>
 
 #define CLIENT_VERSION 2
 #define INFO_FILE_NAME "my.info"
@@ -49,11 +50,15 @@ enum AnswerCodes {
 
 std::vector<std::string> splitString(const std::string& s, char del);
 std::vector<std::string> readServerInfo(const std::string& path);
-std::string bytesToString(std::vector<CryptoPP::byte> bytes);
+std::string bytesToString(const std::vector<CryptoPP::byte> &bytes);
 int sumVector(const std::vector<CryptoPP::byte>& bytes);
 unsigned char extractByte(int value, int byteIndex);
 
-template <typename T, typename... Args>
-void mergeVector(const std::vector<T>& res, const std::vector<T>& vec1, const Args&... rest);
+template <typename T>
+void mergeVector(std::vector<T>& res, std::initializer_list<std::vector<T>> vecs) {
+    for (const auto& vec : vecs) {
+        res.insert(res.end(), vec.begin(), vec.end());
+    }
+}
 
 #endif //UTILS_H

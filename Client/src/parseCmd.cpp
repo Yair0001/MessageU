@@ -112,7 +112,7 @@ std::vector<CryptoPP::byte> ClientCmd::registerUser() {
     }
 
     std::vector<CryptoPP::byte> msgToSend{};
-    mergeVector<CryptoPP::byte>(msgToSend, _cid,_version, _code, _payloadSize, _userName, _publicKey);
+    mergeVector<CryptoPP::byte>(msgToSend, {_cid, _version, _code, _payloadSize, _userName, _publicKey});
     _serverHandler.sendMessage(msgToSend);
     ServerMsg msgToReceive = ServerMsg(_serverHandler.receiveMessage());
     if (msgToReceive.getCode() == SERVER_ERROR) {
@@ -123,8 +123,7 @@ std::vector<CryptoPP::byte> ClientCmd::registerUser() {
     if (infoFile.is_open()) {
         infoFile << bytesToString(_userName) << '\n';
         infoFile << bytesToString(msgToReceive.getPayload()) << '\n';
-        Base64Wrapper b64;
-        infoFile << b64.encode(rsa_private_wrapper.getPublicKey());
+        infoFile << Base64Wrapper::encode(rsa_private_wrapper.getPublicKey());
         return {OK};
     }
     else {

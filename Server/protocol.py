@@ -1,24 +1,18 @@
+import base64
 import constants as const
 from db import DefensiveDb
+import struct
 
 class ClientReq:
     def __init__(self, data):
         self._db = DefensiveDb()
-        curr_offset = 0
         self._data = data
-        self._client_id = self._data[curr_offset:curr_offset+const.CLIENT_ID_SIZE]
 
-        curr_offset += const.CLIENT_ID_SIZE
-        self._version = self._data[curr_offset:curr_offset+const.VERSION_SIZE]
+        protocol_format = '!16s c H I'
+        header_size = struct.calcsize(protocol_format)
+        self._client_id, self._version, self._code, self._payload_size = struct.unpack(protocol_format, data[:header_size])
 
-        curr_offset += const.VERSION_SIZE
-        self._code = self._data[curr_offset:curr_offset+const.CODE_SIZE]
-
-        curr_offset += const.CODE_SIZE
-        self._payload_size = self._data[curr_offset:curr_offset+const.PAYLOAD_SZ_SIZE]
-
-        curr_offset += const.PAYLOAD_SZ_SIZE
-        self._payload = self._data[curr_offset:]
+        self._payload = self._data[header_size:]
 
         self._username = bytes()
         self._public_key = bytes()
@@ -49,14 +43,23 @@ class ClientReq:
 
     def register_req(self):
         usr_name = self._payload[:const.USERNAME_LENGTH] + b'\x00'
-        does_exist = self._db.is_username_in_table(usr_name)
+        strUserName = ""
+        for char in usr_name:
+            if char != 0:
+                strUserName += chr(char)
+
+        does_exist = self._db.is_username_in_table(strUserName)
         if does_exist:
             return const.ERROR_USERNAME_EXISTS
 
         self.set_username(usr_name)
         pub_key = self._payload[const.USERNAME_LENGTH:]
         self.set_public_key(pub_key)
-        return self._db.insert_new_user(self._username,self._public_key)
+
+        strPubKey = base64.b64encode(self._public_key)
+        strPubKey = strPubKey.decode("utf-8")
+
+        return self._db.insert_new_user(strUserName,strPubKey)
 
     def pub_key_req(self):
         other_cid = self._payload

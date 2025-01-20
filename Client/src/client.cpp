@@ -32,7 +32,7 @@ int main() {
         std::cout << "0) Exit client\n";
         std::cout << "? ";
 
-        std::cin >> cmd;
+        std::getline(std::cin,cmd);
 
         std::vector<CryptoPP::byte> retValue = client.parseCommand(cmd);
         ServerMsg ans(retValue);

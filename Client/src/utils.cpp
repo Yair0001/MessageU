@@ -25,14 +25,30 @@ std::vector<std::string> readServerInfo(const std::string& path) {
     return result;
 }
 
+void printMsg(std::vector<CryptoPP::byte> msg) {
+    for (const auto& byte : msg) {
+        std::cout << std::hex << std::uppercase << static_cast<int>(byte);
+    }
+    std::cout << std::dec << std::endl;
+}
 
+void printMsgString(std::vector<CryptoPP::byte> msg) {
+    for (const auto& byte : msg) {
+        std::cout << static_cast<char>(byte);
+    }
+    std::cout << std::endl;
+}
 
 std::string bytesToString(const std::vector<CryptoPP::byte> &bytes) {
-    std::string result;
-    for (int i = 0; i < bytes.size(); i++) {
-        result += std::to_string(bytes[i]);
+    return std::string(bytes.begin(), bytes.end());
+}
+
+std::string bytes_to_hex(const std::vector<CryptoPP::byte>& bytes) {
+    std::stringstream hex_stream;
+    for (const auto byte : bytes) {
+        hex_stream << std::hex << static_cast<int>(byte);
     }
-    return result;
+    return hex_stream.str();
 }
 
 int sumVector(const std::vector<CryptoPP::byte>& bytes) {
@@ -45,4 +61,12 @@ int sumVector(const std::vector<CryptoPP::byte>& bytes) {
 
 unsigned char extractByte(const int value, const int byteIndex) {
     return static_cast<unsigned char>((value >> (byteIndex * 8)) & 0xff);
+}
+
+std::vector<CryptoPP::byte> numOfBytes(std::vector<CryptoPP::byte> bytes, int start, int end) {
+    std::vector<CryptoPP::byte> result;
+    for (int i = start; i < end; i++) {
+        result.push_back(bytes[i]);
+    }
+    return result;
 }

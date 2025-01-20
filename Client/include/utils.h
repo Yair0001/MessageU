@@ -6,6 +6,8 @@
 #include <fstream>
 #include <cryptopp/trap.h>
 #include <iostream>
+#include <cstdint>
+#include <sstream>
 
 #define CLIENT_VERSION 2
 #define INFO_FILE_NAME "my.info"
@@ -53,6 +55,10 @@ std::vector<std::string> readServerInfo(const std::string& path);
 std::string bytesToString(const std::vector<CryptoPP::byte> &bytes);
 int sumVector(const std::vector<CryptoPP::byte>& bytes);
 unsigned char extractByte(int value, int byteIndex);
+void printMsg(std::vector<CryptoPP::byte> msg);
+void printMsgString(std::vector<CryptoPP::byte> msg);
+std::string bytes_to_hex(const std::vector<CryptoPP::byte>& bytes);
+std::vector<CryptoPP::byte> numOfBytes(std::vector<CryptoPP::byte> bytes, int start, int end);
 
 template <typename T>
 void mergeVector(std::vector<T>& res, std::initializer_list<std::vector<T>> vecs) {

@@ -6,7 +6,11 @@ LOCAL_HOST = "127.0.0.1"
 def generate_user_id(username):
     # Create a SHA-256 hash of the username
     hash_object = hashlib.sha256(username.encode())
-    user_id = struct.pack("!s",hash_object.hexdigest()[:16])  # Take the first 16 characters for compactness
+    hash_bytes = hash_object.hexdigest()
+    print(hash_bytes[:16])
+    hash_bytes = bytes.fromhex(hash_bytes)
+
+    user_id = struct.pack("!16s", hash_bytes[:16]) # "!16s" specifies a fixed-size 16-byte string
     return user_id
 
 def read_port(file):

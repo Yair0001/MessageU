@@ -6,23 +6,28 @@ from protocol import ClientReq
 import constants as const
 import struct
 
-lock = threading.Lock()
 
 def pack_server_prot(client):
     version = struct.pack("!c", client.get_version())
-    code = struct.pack("!h", client.get_code())
-    payload_size = struct.pack("!I", client.get_payload_size())
-    return version+code+payload_size
+    code = struct.pack("!H", client.get_code())
+
+    print("version : ", version)
+    print("code: ", code)
+
+    print("version len: ", len(version))
+    print("code len: ", len(code))
+    return version+code
 
 def new_client(client):
     while True:
         data = client.recv(1024)
         if not data:
             print("No DATA")
-            lock.release()
             break
-        client_req = ClientReq(struct.pack("!s",data))
-        req_code = int.from_bytes(client_req.get_code(), byteorder=const.ENDIAN)
+        print(f"Received data: {data}")
+        client_req = ClientReq(data)
+
+        req_code = client_req.get_code()
 
         if req_code == const.REGISTER_CODE:
             cid = client_req.register_req()
@@ -34,7 +39,15 @@ def new_client(client):
             else:
                 print("ADDED USERNAME")
                 prot = pack_server_prot(client_req)
-                client.send(prot+cid)
+
+                print("\nprotocol length", bytes.hex(prot))
+                print("protocol length", len(prot))
+
+                client_req._payload_size = struct.pack("!I", len(cid))
+
+                print("cid ", bytes.hex(cid))
+                print("cid len", len(cid))
+                client.send(prot+client_req.get_payload_size()+cid)
 
         elif req_code == const.CLIENTS_LIST_CODE:
             clients_list = client_req.clients_list_req()
@@ -83,7 +96,6 @@ def main():
     #Clients Loop
     while True:
         client, addr = sock.accept()
-        lock.acquire()
         print('Connected to :', addr[0], ':', addr[1])
 
         start_new_thread(new_client,(client,))

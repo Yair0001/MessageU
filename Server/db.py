@@ -10,12 +10,27 @@ class DefensiveDb:
         self._cur = self._db.cursor()
         self._usr_count = 0
         self._clients_list = b""
-        #self.create_tables()
-        self.reset_db()
+        self.create_tables()
+        self.initialize_clients_list()
+        # self.reset_db()
 
     def create_tables(self):
         self._cur.execute("CREATE TABLE IF NOT EXISTS clients(ID, UserName, PublicKey, LastSeen)")
         self._cur.execute("CREATE TABLE IF NOT EXISTS messages(ID, ToClient, FromClient, Type, Content)")
+
+    def initialize_clients_list(self):
+        """Populate the clients list from the database."""
+        self._clients_list = b""
+        self._usr_count = 0
+        for cid, user_name in self._cur.execute("SELECT ID, UserName FROM clients"):
+            user_name_packed = struct.pack(f"!{const.USERNAME_LENGTH}s", bytes(user_name, 'utf-8')) + b'\x00'
+            cid_unpacked_tup = struct.unpack("!16s", bytes.fromhex(cid))
+            cid_unpacked = b"".join(cid_unpacked_tup)
+            if self._usr_count == 0:
+                self._clients_list = cid_unpacked + user_name_packed
+            else:
+                self._clients_list += cid_unpacked + user_name_packed
+            self._usr_count += 1
 
     def get_top_msg_by_cid(self,to_cid):
         res = self._cur.execute(f"SELECT FromClient,ID,Type,Content FROM message WHERE FromClient={to_cid}")
@@ -40,24 +55,15 @@ class DefensiveDb:
         for i in cid_unpacked_tup:
             cid_unpacked += bytes.hex(i)
 
-        if self._usr_count == 0:
-            self._clients_list = cid + user_name_packed
-        else:
-            self._clients_list += cid + user_name_packed
-
-        print("usr count: ", self._usr_count)
-        print("usr name ", user_name)
-        print("pub key: ", public_key)
-        print("pub key: ", cid_unpacked)
-        print("time: ", dt.now())
+        self._clients_list += cid + user_name_packed
 
         self._cur.execute("""
             INSERT INTO clients (ID, UserName, PublicKey, LastSeen)
             VALUES (?, ?, ?, ?)
         """, (cid_unpacked, user_name, public_key, dt.now()))
         self._db.commit()
-
         self._usr_count += 1
+
         return cid
 
     def get_clients_list(self): return self._clients_list

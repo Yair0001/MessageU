@@ -16,9 +16,14 @@ private:
 
 public:
     ServerMsg(std::vector<CryptoPP::byte> msg);
-    int getCode() const;
+    std::vector<CryptoPP::byte> getCode() const;
+    std::vector<CryptoPP::byte> getPayloadSizeVec() const;
+    int getPayloadSizeInt() const;
     std::vector<CryptoPP::byte> getPayload() const;
     static bool isValidCode(int code);
+    static bool errorsExist(const ServerMsg& ans);
+    static void printError(const ServerMsg& ans);
+    static void printClientsList(const std::vector<std::vector<CryptoPP::byte>>& clients);
 
 };
 #endif //SERVERMSG_H

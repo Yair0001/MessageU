@@ -10,12 +10,10 @@ import struct
 def pack_server_prot(client):
     version = struct.pack("!c", client.get_version())
     code = struct.pack("!H", client.get_code())
-
-    print("version : ", version)
-    print("code: ", code)
-
-    print("version len: ", len(version))
-    print("code len: ", len(code))
+    # print("version : ", version)
+    # print("code: ", code)
+    # print("version len: ", len(version))
+    # print("code len: ", len(code))
     return version+code
 
 def new_client(client):
@@ -28,36 +26,40 @@ def new_client(client):
         client_req = ClientReq(data)
 
         req_code = client_req.get_code()
-
         if req_code == const.REGISTER_CODE:
             cid = client_req.register_req()
             if cid == const.ERROR_USERNAME_EXISTS:
                 print("USERNAME ALREADY EXISTS")
-                client_version = struct.pack("!i", const.VERSION_SIZE)
-                error_code = struct.pack("!h",const.ERROR_SERVER) + client_version
-                client.send(error_code)
+                client_req._code = const.ERROR_SERVER
+                prot = pack_server_prot(client_req)
+                client_req._payload_size = struct.pack("!I", 0)
+                client.send(prot+client_req.get_payload_size())
             else:
                 print("ADDED USERNAME")
                 prot = pack_server_prot(client_req)
-
-                print("\nprotocol length", bytes.hex(prot))
-                print("protocol length", len(prot))
-
                 client_req._payload_size = struct.pack("!I", len(cid))
-
-                print("cid ", bytes.hex(cid))
-                print("cid len", len(cid))
                 client.send(prot+client_req.get_payload_size()+cid)
 
         elif req_code == const.CLIENTS_LIST_CODE:
             clients_list = client_req.clients_list_req()
             if len(clients_list) == 0:
                 print("NO CLIENTS YET")
-                error_code = struct.pack("!h",const.ERROR_SERVER)
-                client.send(error_code)
+                client_req._code = const.ERROR_SERVER
+                prot = pack_server_prot(client_req)
+                client_req._payload_size = struct.pack("!I", 0)
+
+                print("code: ", client_req.get_code())
+                print("version: ",client_req.get_version())
+                print("payload size: ",client_req.get_payload_size())
+
+                client.send(prot+client_req.get_payload_size())
             else:
                 #Return clients_list to user
                 prot = pack_server_prot(client_req)
+                client_req._payload_size = struct.pack("!I", len(clients_list)*(const.USERNAME_LENGTH+1+const.CLIENT_ID_SIZE))
+                print("code: ", client_req.get_code())
+                print("version: ", client_req.get_version())
+                print("payload size: ", client_req.get_payload_size())
                 client.send(prot+clients_list)
 
         elif req_code == const.CLIENT_PUB_KEY_CODE:

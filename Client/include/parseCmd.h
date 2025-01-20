@@ -34,6 +34,7 @@ public:
     explicit ClientCmd(ServerHandler& serverHandler);
     std::vector<CryptoPP::byte> parseCommand(const std::string& command);
     std::vector<CryptoPP::byte> registerUser();
+    std::vector<CryptoPP::byte> clientsList();
     ~ClientCmd() = default;
 
 };

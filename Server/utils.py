@@ -7,7 +7,6 @@ def generate_user_id(username):
     # Create a SHA-256 hash of the username
     hash_object = hashlib.sha256(username.encode())
     hash_bytes = hash_object.hexdigest()
-    print(hash_bytes[:16])
     hash_bytes = bytes.fromhex(hash_bytes)
 
     user_id = struct.pack("!16s", hash_bytes[:16]) # "!16s" specifies a fixed-size 16-byte string

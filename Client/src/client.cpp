@@ -2,13 +2,6 @@
 #include "utils.h"
 #include "parseCmd.h"
 
-bool errorsExist(ServerMsg& ans) {
-    if (ServerMsg::isValidCode(ans.getCode()) == false) {
-        return true;
-    }
-    return false;
-}
-
 int main() {
     const std::vector<std::string> serverInfo = readServerInfo(SERVER_INFO_FILE);
     if (serverInfo.empty()) {
@@ -36,8 +29,8 @@ int main() {
 
         std::vector<CryptoPP::byte> retValue = client.parseCommand(cmd);
         ServerMsg ans(retValue);
-        if (errorsExist(ans)) {
-            std::cerr << "\nServer responded with error\n";
+        if (ServerMsg::errorsExist(ans)) {
+            ServerMsg::printError(ans);
         }
     }
 

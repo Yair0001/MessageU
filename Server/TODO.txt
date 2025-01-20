@@ -1,1 +1,2 @@
-1. Want to refactor all of ClientReq class to use struct.pack
+1. Implement lock for the database
+2. Change pack_server_prot to calculate payloadSize too

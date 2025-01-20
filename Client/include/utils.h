@@ -13,7 +13,7 @@
 #define INFO_FILE_NAME "my.info"
 #define SERVER_INFO_FILE "../server.info"
 
-#define BYTES_TILL_PAYLOAD 7
+#define BYTES_TILL_PAYLOAD VERSION_SIZE+CODE_SIZE+PAYLOAD_SZ_SIZE
 
 enum ProtocolSizes{
     CLIENT_ID_SIZE=16,
@@ -29,7 +29,9 @@ enum ProtocolSizes{
 enum ErrorCodes{
     EXIT=0x00,
     OK=0xFF,
-    REGISTER_ERROR=0x01,
+    ALREADY_REGISTERED=0x01,
+    NOT_REGISTERED=0x02,
+    NO_CLIENTS=0x03,
     SERVER_ERROR=9000,
 };
 
@@ -39,6 +41,7 @@ enum RequestCodes {
     PUBLIC_KEY_CODE=602,
     SEND_MSG_CODE=603,
     WAITING_LIST_CODE=604,
+    NO_CODE=605,
 };
 
 enum AnswerCodes {
@@ -54,10 +57,9 @@ std::vector<std::string> splitString(const std::string& s, char del);
 std::vector<std::string> readServerInfo(const std::string& path);
 std::string bytesToString(const std::vector<CryptoPP::byte> &bytes);
 int sumVector(const std::vector<CryptoPP::byte>& bytes);
-unsigned char extractByte(int value, int byteIndex);
 void printMsg(std::vector<CryptoPP::byte> msg);
 void printMsgString(std::vector<CryptoPP::byte> msg);
-std::string bytes_to_hex(const std::vector<CryptoPP::byte>& bytes);
+std::string bytesToHex(const std::vector<CryptoPP::byte>& bytes);
 std::vector<CryptoPP::byte> numOfBytes(std::vector<CryptoPP::byte> bytes, int start, int end);
 
 template <typename T>
@@ -65,6 +67,37 @@ void mergeVector(std::vector<T>& res, std::initializer_list<std::vector<T>> vecs
     for (const auto& vec : vecs) {
         res.insert(res.end(), vec.begin(), vec.end());
     }
+}
+
+template <typename T>
+std::vector<CryptoPP::byte> getBytesAsCryptoPP(T value, const size_t numOfBytes) {
+    static_assert(std::is_integral<T>::value || std::is_enum<T>::value,
+                  "T must be an integral or enum type");
+
+    if (numOfBytes > sizeof(T)) {
+        throw std::invalid_argument("numOfBytes exceeds the size of the input value type");
+    }
+
+    std::vector<CryptoPP::byte> bytes(numOfBytes);
+    for (size_t i = 0; i < numOfBytes; ++i) {
+        bytes[numOfBytes - 1 - i] = static_cast<CryptoPP::byte>((value >> (i * 8)) & 0xFF);
+    }
+    return bytes;
+}
+
+template <typename T>
+T bytesToType(const std::vector<CryptoPP::byte>& bytes) {
+    static_assert(std::is_integral<T>::value, "T must be an integral type");
+
+    if (bytes.size() > sizeof(T)) {
+        throw std::invalid_argument("Byte vector size exceeds the size of the output type");
+    }
+
+    T value = 0;
+    for (size_t i = 0; i < bytes.size(); ++i) {
+        value = (value << 8) | static_cast<T>(bytes[i]);
+    }
+    return value;
 }
 
 #endif //UTILS_H

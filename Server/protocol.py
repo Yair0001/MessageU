@@ -47,7 +47,6 @@ class ClientReq:
         for char in usr_name:
             if char != 0:
                 strUserName += chr(char)
-
         does_exist = self._db.is_username_in_table(strUserName)
         if does_exist:
             return const.ERROR_USERNAME_EXISTS
@@ -58,7 +57,6 @@ class ClientReq:
 
         strPubKey = base64.b64encode(self._public_key)
         strPubKey = strPubKey.decode("utf-8")
-
         return self._db.insert_new_user(strUserName,strPubKey)
 
     def pub_key_req(self):

@@ -43,7 +43,7 @@ std::string bytesToString(const std::vector<CryptoPP::byte> &bytes) {
     return std::string(bytes.begin(), bytes.end());
 }
 
-std::string bytes_to_hex(const std::vector<CryptoPP::byte>& bytes) {
+std::string bytesToHex(const std::vector<CryptoPP::byte>& bytes) {
     std::stringstream hex_stream;
     for (const auto byte : bytes) {
         hex_stream << std::hex << static_cast<int>(byte);
@@ -57,10 +57,6 @@ int sumVector(const std::vector<CryptoPP::byte>& bytes) {
         result += bytes[i];
     }
     return result;
-}
-
-unsigned char extractByte(const int value, const int byteIndex) {
-    return static_cast<unsigned char>((value >> (byteIndex * 8)) & 0xff);
 }
 
 std::vector<CryptoPP::byte> numOfBytes(std::vector<CryptoPP::byte> bytes, int start, int end) {

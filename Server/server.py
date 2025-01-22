@@ -10,10 +10,8 @@ import struct
 def pack_server_prot(client):
     version = struct.pack("!c", client.get_version())
     code = struct.pack("!H", client.get_code())
-    # print("version : ", version)
-    # print("code: ", code)
-    # print("version len: ", len(version))
-    # print("code len: ", len(code))
+    print("version len: ", len(version))
+    print("code len: ", len(code))
     return version+code
 
 def new_client(client):
@@ -56,11 +54,12 @@ def new_client(client):
             else:
                 #Return clients_list to user
                 prot = pack_server_prot(client_req)
-                client_req._payload_size = struct.pack("!I", len(clients_list)*(const.USERNAME_LENGTH+1+const.CLIENT_ID_SIZE))
+                client_req._payload_size = struct.pack("!I", len(clients_list))
                 print("code: ", client_req.get_code())
                 print("version: ", client_req.get_version())
                 print("payload size: ", client_req.get_payload_size())
-                client.send(prot+clients_list)
+                print("payload len: ", len(client_req.get_payload_size()))
+                client.send(prot+client_req.get_payload_size()+clients_list)
 
         elif req_code == const.CLIENT_PUB_KEY_CODE:
             pub_key = client_req.pub_key_req()

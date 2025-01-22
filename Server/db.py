@@ -6,13 +6,13 @@ import utils
 
 class DefensiveDb:
     def __init__(self):
+        self._clients_list = None
         self._db = sqlite3.connect(const.DATABASE_NAME)
         self._cur = self._db.cursor()
         self._usr_count = 0
-        self._clients_list = b""
         self.create_tables()
-        self.initialize_clients_list()
         # self.reset_db()
+        self.initialize_clients_list()
 
     def create_tables(self):
         self._cur.execute("CREATE TABLE IF NOT EXISTS clients(ID, UserName, PublicKey, LastSeen)")
@@ -24,8 +24,7 @@ class DefensiveDb:
         self._usr_count = 0
         for cid, user_name in self._cur.execute("SELECT ID, UserName FROM clients"):
             user_name_packed = struct.pack(f"!{const.USERNAME_LENGTH}s", bytes(user_name, 'utf-8')) + b'\x00'
-            cid_unpacked_tup = struct.unpack("!16s", bytes.fromhex(cid))
-            cid_unpacked = b"".join(cid_unpacked_tup)
+            cid_unpacked = bytes.fromhex(cid)
             if self._usr_count == 0:
                 self._clients_list = cid_unpacked + user_name_packed
             else:

@@ -96,20 +96,21 @@ int ServerMsg::getPayloadSizeInt() const {
 }
 
 void ServerMsg::printClientsList(const std::vector<std::vector<CryptoPP::byte>>& clients) {
-    std::vector<CryptoPP::byte> currName(NAME_SIZE);
+    std::vector<CryptoPP::byte> currName{};
     std::vector<CryptoPP::byte> currCID(CLIENT_ID_SIZE);
 
     for (unsigned int i = 0; i < clients.size(); i++) {
-
         for (unsigned int j = 0; j < clients[i].size(); j++) {
-            if (j < NAME_SIZE && clients[i][j] != 0) {
-                currName[j] = clients[i][j];
-            }
-            else if (clients[i][j] != 0) {
+            if (j < CLIENT_ID_SIZE) {
                 currCID[j] = clients[i][j];
             }
+            else if (clients[i][j] != 0x00) {
+                currName.push_back(clients[i][j]);
+            }
         }
+
         std::cout << "CLIENT " << i << " Name: " << bytesToString(currName) << std::endl;
         std::cout << "CLIENT " << i << " CID: " << bytesToHex(currCID) << std::endl;
+        currName.clear();
     }
 }

@@ -34,17 +34,16 @@ std::vector<CryptoPP::byte> ServerHandler::receiveMessage() {
         std::memcpy(&additionalBytes, &initialBuffer[3], sizeof(additionalBytes));
         additionalBytes = ntohl(additionalBytes); // Convert from network to host byte order
 
-        // Step 3: Read the additional bytes
-        std::vector<CryptoPP::byte> additionalBuffer(additionalBytes);
-        boost::asio::read(_socket, boost::asio::buffer(additionalBuffer, additionalBytes));
-
-        // printMsg(additionalBuffer);
-
-        // Step 4: Combine the initial and additional bytes into a single vector
         std::vector<CryptoPP::byte> message;
         message.insert(message.end(), initialBuffer.begin(), initialBuffer.end());
-        message.insert(message.end(), additionalBuffer.begin(), additionalBuffer.end());
-
+        // Step 3: Read the additional bytes
+        if (additionalBytes > 0) {
+            // std::cout << "GOT " << additionalBytes << " ADDITIONAL BYTES" << std::endl;
+            std::vector<CryptoPP::byte> additionalBuffer(additionalBytes);
+            boost::asio::read(_socket, boost::asio::buffer(additionalBuffer, additionalBytes));
+            message.insert(message.end(), additionalBuffer.begin(), additionalBuffer.end());
+            printMsg(additionalBuffer);
+        }
         // printMsg(message);
 
         return message;

@@ -3,33 +3,37 @@ from datetime import datetime as dt
 import constants as const
 import struct
 import utils
+from constants import CLIENT_ID_SIZE
+
 
 class DefensiveDb:
     def __init__(self):
-        self._clients_list = None
         self._db = sqlite3.connect(const.DATABASE_NAME)
         self._cur = self._db.cursor()
         self._usr_count = 0
         self.create_tables()
         # self.reset_db()
-        self.initialize_clients_list()
+        self._index = self.initialize_index()
+        self._clients_list = self.initialize_clients_list()
 
     def create_tables(self):
         self._cur.execute("CREATE TABLE IF NOT EXISTS clients(ID, UserName, PublicKey, LastSeen)")
         self._cur.execute("CREATE TABLE IF NOT EXISTS messages(ID, ToClient, FromClient, Type, Content)")
 
+    def initialize_index(self):
+        res = self._cur.execute("SELECT COUNT(*) FROM messages")
+        return res.fetchone()[0]
+
     def initialize_clients_list(self):
         """Populate the clients list from the database."""
-        self._clients_list = b""
+        clients_list = []
         self._usr_count = 0
         for cid, user_name in self._cur.execute("SELECT ID, UserName FROM clients"):
             user_name_packed = struct.pack(f"!{const.USERNAME_LENGTH}s", bytes(user_name, 'utf-8')) + b'\x00'
             cid_unpacked = bytes.fromhex(cid)
-            if self._usr_count == 0:
-                self._clients_list = cid_unpacked + user_name_packed
-            else:
-                self._clients_list += cid_unpacked + user_name_packed
+            self._clients_list.append(cid_unpacked + user_name_packed)
             self._usr_count += 1
+        return clients_list
 
     def get_top_msg_by_cid(self,to_cid):
         res = self._cur.execute(f"SELECT FromClient,ID,Type,Content FROM message WHERE FromClient={to_cid}")
@@ -54,7 +58,7 @@ class DefensiveDb:
         for i in cid_unpacked_tup:
             cid_unpacked += bytes.hex(i)
 
-        self._clients_list += cid + user_name_packed
+        self._clients_list.append(bytes.fromhex(cid_unpacked) + user_name_packed)
 
         self._cur.execute("""
             INSERT INTO clients (ID, UserName, PublicKey, LastSeen)
@@ -65,16 +69,28 @@ class DefensiveDb:
 
         return cid
 
-    def get_clients_list(self): return self._clients_list
+    def get_clients_list(self, cid):
+        return self.rmv_client_from_clients_list(cid)
+
+    def rmv_client_from_clients_list(self,cid):
+        newClientsList = []
+        currListCid = b""
+        for client in self._clients_list:
+            for i in range(CLIENT_ID_SIZE):
+                currListCid += client[i]
+            if currListCid != cid:
+                newClientsList.append(client)
+        return newClientsList
+
 
     def add_new_message(self,cid,other_cid,msg_type,content):
         #create new unique msg_id in length 4 bytes
-        generated_id = 0
+        self._index += 1
         self._cur.execute(f"""
         INSERT INTO messages
-        VALUES({generated_id},{other_cid},{cid},{msg_type},{content})
+        VALUES({self._index},{other_cid},{cid},{msg_type},{content})
         """)
-        return generated_id
+        return other_cid,self._index
 
     def reset_db(self):
         self._cur.execute("DROP TABLE clients")

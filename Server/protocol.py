@@ -63,31 +63,25 @@ class ClientReq:
         other_cid = self._payload
         does_exist = self._db.is_cid_in_table(other_cid)
         if not does_exist:
-            return const.ERROR_CID_NOT_EXISTS
+            return const.ERROR_CID_NOT_EXISTS, const.ERROR_CID_NOT_EXISTS
 
         other_pub_key = self._db.get_pub_key_of_cid(other_cid)
-        return other_pub_key
+        return other_cid,other_pub_key
 
     def send_msg_req(self):
-        curr_offset = 0
-        other_cid = self._payload[curr_offset:const.CLIENT_ID_SIZE]
-        curr_offset += const.CLIENT_ID_SIZE
 
-        self.set_msg_type(self._payload[curr_offset:curr_offset+const.MSG_TYPE_SIZE])
-        curr_offset += const.MSG_TYPE_SIZE
-
-        self.set_content_size(self._payload[curr_offset:curr_offset+const.CONTENT_SZ_SIZE])
-        curr_offset += const.CONTENT_SZ_SIZE
-
-        self.set_msg_content(self._payload[curr_offset:])
+        protocol_format = f'!{const.CLIENT_ID_SIZE}s c I'
+        msg_header_size = struct.calcsize(protocol_format)
+        other_cid, self._msg_type, self._content_size = struct.unpack(protocol_format, self._payload[:msg_header_size])
+        self._msg_content = self._data[msg_header_size:]
 
         return self._db.add_new_message(self.get_client_id(),other_cid,self.get_msg_type(),self.get_msg_content())
 
     def clients_list_req(self):
-        return self._db.get_clients_list()
+        return self._db.get_clients_list(self._client_id)
 
     def waiting_msgs_req(self):
-        msgs_to_ret = ""
+        msgs_to_ret = b""
 
         res = self._db.get_top_msg_by_cid(self.get_client_id())
         if res == const.ERROR_NO_WAITING_MSGS:
@@ -96,16 +90,15 @@ class ClientReq:
         while res != const.ERROR_NO_WAITING_MSGS:
             # res is a tuple that contains FromClient cid, Message ID, Message Type, Message Content.
             # it is in this specific order
+            other_cid = struct.pack(f"!{const.CLIENT_ID_SIZE}s", res[0])
+            msg_id = struct.pack("!I", res[1])
+            msg_type = struct.pack("!c", res[2])
+            msg_content = struct.pack(f"!{len(res[3])}s", res[3])
+
+            msg_size = struct.pack("!I",const.CLIENT_ID_SIZE + const.MSG_ID_SIZE + const.MSG_TYPE_SIZE + len(msg_content))
+            msgs_to_ret = other_cid + msg_id + msg_type + msg_size + msg_content
+
             res = self._db.get_top_msg_by_cid(self.get_client_id())
-
-            other_cid = res[0]
-            msg_id = res[1]
-            msg_type = res[2]
-            msg_content = res[3]
-
-            msg_size = const.CLIENT_ID_SIZE + const.MSG_ID_SIZE + const.MSG_TYPE_SIZE + len(msg_content)
-            curr_msg = other_cid + msg_id + msg_size + msg_type + msg_content
-            msgs_to_ret += curr_msg
 
         return msgs_to_ret
 

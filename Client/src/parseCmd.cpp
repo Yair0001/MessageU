@@ -12,10 +12,10 @@ ClientCmd::ClientCmd(ServerHandler &serverHandler)
 std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string &command) {
     switch (std::stoi(command)) {
         case 110:
-            _userName.resize(NAME_SIZE + 1);
+            _userName.resize(NAME_SIZE);
             _publicKey.resize(PUBLIC_KEY_SIZE);
             _code = getBytesAsCryptoPP(REGISTER_CODE,CODE_SIZE);
-            _payloadSize = getBytesAsCryptoPP(NAME_SIZE + 1 + PUBLIC_KEY_SIZE,PAYLOAD_SZ_SIZE);
+            _payloadSize = getBytesAsCryptoPP(NAME_SIZE + PUBLIC_KEY_SIZE,PAYLOAD_SZ_SIZE);
             return registerUser();
         case 120:
             _code = getBytesAsCryptoPP(CLIENTS_LIST_CODE,CODE_SIZE);
@@ -25,6 +25,7 @@ std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string &command) 
             _code = getBytesAsCryptoPP(PUBLIC_KEY_SIZE,CODE_SIZE);
             _payloadSize = getBytesAsCryptoPP(CLIENT_ID_SIZE,PAYLOAD_SZ_SIZE);
             _otherCid.resize(CLIENT_ID_SIZE);
+            return getPublicKeyOfCid();
             break;
         case 140:
             _code = getBytesAsCryptoPP(WAITING_LIST_CODE,CODE_SIZE);
@@ -69,11 +70,10 @@ std::vector<CryptoPP::byte> ClientCmd::registerUser() {
         userName.pop_back();
     }
 
-    if (userName.length() > NAME_SIZE) {
-        userName = userName.substr(0, NAME_SIZE) + '\x00'; // Truncate input
+    if (userName.length() > NAME_SIZE-1) {
+        userName = userName.substr(0, NAME_SIZE-1) + '\x00'; // Truncate input
     }
 
-    _userName.resize(NAME_SIZE);
     for (int i = 0; i < NAME_SIZE; i++) {
         if (userName[i] != '\0' && i < userName.length()) {
             _userName[i] = userName[i];
@@ -144,6 +144,9 @@ std::vector<CryptoPP::byte> ClientCmd::clientsList() {
         mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
         return res;
     }
+
+    _cid = getCidOfInfoFile(userFile);
+
     std::vector<CryptoPP::byte> msgToSend{};
     mergeVector<CryptoPP::byte>(msgToSend, {_cid, _version, _code, _payloadSize});
     _serverHandler.sendMessage(msgToSend);
@@ -159,15 +162,15 @@ std::vector<CryptoPP::byte> ClientCmd::clientsList() {
     std::vector<CryptoPP::byte> ansPayload = msgToReceive.getPayload();
     int currOffset = 0;
     int ansPayloadSize = msgToReceive.getPayloadSizeInt();
-    int numOfClients = ansPayloadSize/(CLIENT_ID_SIZE+NAME_SIZE+1);
+    int numOfClients = ansPayloadSize/(CLIENT_ID_SIZE+NAME_SIZE);
     std::vector<std::vector<CryptoPP::byte>> clients(numOfClients);
     for (int i = 0; i < numOfClients; i++) {
-        std::vector<CryptoPP::byte> currentClient(CLIENT_ID_SIZE+NAME_SIZE+1);
-        for (int j = 0; j < CLIENT_ID_SIZE+NAME_SIZE+1; j++) {
+        std::vector<CryptoPP::byte> currentClient(CLIENT_ID_SIZE+NAME_SIZE);
+        for (int j = 0; j < CLIENT_ID_SIZE+NAME_SIZE; j++) {
             currentClient[j] = ansPayload[currOffset+j];
         }
         clients[i] = currentClient;
-        currOffset += CLIENT_ID_SIZE+NAME_SIZE+1;
+        currOffset += CLIENT_ID_SIZE+NAME_SIZE;
     }
 
     ServerMsg::printClientsList(clients);
@@ -175,4 +178,56 @@ std::vector<CryptoPP::byte> ClientCmd::clientsList() {
     _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
     mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
     return res;
+}
+
+std::vector<CryptoPP::byte> ClientCmd::getPublicKeyOfCid(){
+    std::vector<CryptoPP::byte> res;
+
+    std::ifstream userFile(INFO_FILE_NAME);
+    if (!userFile.is_open()) {
+        std::cout << "FILE DIDNT OPEN\n";
+        _code = getBytesAsCryptoPP(NOT_REGISTERED, CODE_SIZE);
+        _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
+        mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
+        return res;
+    }
+
+    _cid = getCidOfInfoFile(userFile);
+
+    std::string otherCid;
+
+    std::cout << "Enter Client ID To get public key of: ";
+    std::getline(std::cin, otherCid);
+
+    if (!otherCid.empty() && otherCid[otherCid.length() - 1] == '\n') {
+        otherCid.pop_back();
+    }
+
+    if (otherCid.length() > CLIENT_ID_SIZE) {
+        otherCid = otherCid.substr(0, CLIENT_ID_SIZE); // Truncate input
+    }
+    else if (otherCid.length() < CLIENT_ID_SIZE){
+        std::cout << "Invalid Client ID!\n";
+        _code = getBytesAsCryptoPP(INVALID_CID, CODE_SIZE);
+        _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
+        mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
+        return res;
+    }
+
+    for (int i = 0; i < CLIENT_ID_SIZE; i++) {
+        _otherCid[i] = otherCid[i];
+    }
+
+    std::vector<CryptoPP::byte> msgToSend{};
+    mergeVector<CryptoPP::byte>(msgToSend, {_cid, _version, _code, _payloadSize, _otherCid});
+    _serverHandler.sendMessage(msgToSend);
+    ServerMsg msgToReceive = ServerMsg(_serverHandler.receiveMessage());
+    if (bytesToType<int>(msgToReceive.getCode()) == SERVER_ERROR) {
+        _code = getBytesAsCryptoPP(SERVER_ERROR,CODE_SIZE);
+        _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
+        mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
+        return res;
+    }
+
+
 }

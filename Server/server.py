@@ -59,25 +59,41 @@ def new_client(client):
                 print("version: ", client_req.get_version())
                 print("payload size: ", client_req.get_payload_size())
                 print("payload len: ", len(client_req.get_payload_size()))
-                client.send(prot+client_req.get_payload_size()+clients_list)
+
+                list_to_send = b""
+                for i in clients_list:
+                    list_to_send += i
+
+                client.send(prot+client_req.get_payload_size()+list_to_send)
 
         elif req_code == const.CLIENT_PUB_KEY_CODE:
-            pub_key = client_req.pub_key_req()
+            other_cid, pub_key = client_req.pub_key_req()
             if pub_key == const.ERROR_CID_NOT_EXISTS:
                 print("CID DOES NOT EXIST")
-                error_code = struct.pack("!h", const.ERROR_SERVER)
-                client.send(error_code)
+                client_req._code = const.ERROR_SERVER
+                prot = pack_server_prot(client_req)
+                client_req._payload_size = struct.pack("!I", 0)
+                print("code: ", client_req.get_code())
+                print("version: ", client_req.get_version())
+                print("payload size: ", client_req.get_payload_size())
+                print("payload len: ", len(client_req.get_payload_size()))
+
+                client.send(prot+client_req.get_payload_size())
             else:
                 print("Public key: ", pub_key)
                 prot = pack_server_prot(client_req)
-                pub_key_packed = struct.pack("!s",pub_key)
-                cid_packed = struct.pack("!s",client_req.get_client_id())
-                client.send(prot+pub_key_packed)
+                client_req._payload_size = struct.pack("!I", const.CLIENT_ID_SIZE+const.PUBLIC_KEY_SIZE)
+                pub_key_packed = struct.pack(f"!{const.PUBLIC_KEY_SIZE}s",pub_key)
+                other_cid_packed = struct.pack(f"!{const.CLIENT_ID_SIZE}s", other_cid)
+                client.send(prot+client_req.get_payload_size()+pub_key_packed+other_cid_packed)
 
         elif req_code == const.SEND_MSG_CODE:
-            msg_id = client_req.send_msg_req()
-            print("Message ID: ", msg_id)
-            #Return cid and msg_id to client
+            cid, msg_id = client_req.send_msg_req()
+            client_req._payload_size = struct.pack("!I", const.CLIENT_ID_SIZE+const.MSG_ID_SIZE)
+            prot = pack_server_prot(client_req)
+            cid_packed = struct.pack(f"!{const.CLIENT_ID_SIZE}s", cid)
+            msg_id_packed = struct.pack(f"!I", msg_id)
+            client.send(prot+client_req.get_payload_size()+cid_packed+msg_id_packed)
 
         elif req_code == const.WAITING_MESSAGES_CODE:
             waiting_msgs = client_req.waiting_msgs_req()
@@ -85,7 +101,9 @@ def new_client(client):
                 print("NO MESSAGES FOR YOU NIGGER")
             else:
                 #Return all messages to client
-                pass
+                prot = pack_server_prot(client_req)
+                client_req._payload_size = struct.pack("!I", len(waiting_msgs))
+                client.send(prot+client_req.get_payload_size()+waiting_msgs)
 
     client.close()
 

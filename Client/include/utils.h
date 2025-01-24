@@ -13,14 +13,14 @@
 #define INFO_FILE_NAME "my.info"
 #define SERVER_INFO_FILE "../server.info"
 
-#define BYTES_TILL_PAYLOAD VERSION_SIZE+CODE_SIZE+PAYLOAD_SZ_SIZE
+#define BYTES_TILL_PAYLOAD (VERSION_SIZE+CODE_SIZE+PAYLOAD_SZ_SIZE)
 
 enum ProtocolSizes{
     CLIENT_ID_SIZE=16,
     VERSION_SIZE=1,
     CODE_SIZE=2,
     PAYLOAD_SZ_SIZE=4,
-    NAME_SIZE=254, // + 1 \x00 byte
+    NAME_SIZE=255,
     PUBLIC_KEY_SIZE=160,
     MSG_TYPE_SIZE=1,
     MSG_CONTENT_SIZE=4,
@@ -32,6 +32,7 @@ enum ErrorCodes{
     ALREADY_REGISTERED=0x01,
     NOT_REGISTERED=0x02,
     NO_CLIENTS=0x03,
+    INVALID_CID=0x04,
     SERVER_ERROR=9000,
 };
 
@@ -61,6 +62,11 @@ void printMsg(std::vector<CryptoPP::byte> msg);
 void printMsgString(std::vector<CryptoPP::byte> msg);
 std::string bytesToHex(const std::vector<CryptoPP::byte>& bytes);
 std::vector<CryptoPP::byte> numOfBytes(std::vector<CryptoPP::byte> bytes, int start, int end);
+std::vector<CryptoPP::byte> stringToBytes(const std::string& str);
+std::vector<std::string> getFileContents(std::ifstream& file);
+std::vector<CryptoPP::byte> hexStrToBytes(const std::string& hexString);
+std::vector<CryptoPP::byte> getCidOfInfoFile(std::ifstream& file);
+
 
 template <typename T>
 void mergeVector(std::vector<T>& res, std::initializer_list<std::vector<T>> vecs) {
@@ -94,8 +100,8 @@ T bytesToType(const std::vector<CryptoPP::byte>& bytes) {
     }
 
     T value = 0;
-    for (size_t i = 0; i < bytes.size(); ++i) {
-        value = (value << 8) | static_cast<T>(bytes[i]);
+    for (unsigned char byte : bytes) {
+        value = (value << 8) | static_cast<T>(byte);
     }
     return value;
 }

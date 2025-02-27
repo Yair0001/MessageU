@@ -234,6 +234,19 @@ std::vector<CryptoPP::byte> ClientCmd::getPublicKeyOfCid(){
         return res;
     }
 
+    _code = msgToReceive.getCode();
+    _payloadSize = msgToReceive.getPayloadSizeVec();
+    _payload = msgToReceive.getPayload();
+    mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize,_payload});
+
+    std::vector<CryptoPP::byte> currentPublicKey{};
+    for (size_t i=0; i < PUBLIC_KEY_SIZE; i++)
+    {
+        currentPublicKey.push_back(_payload[i+CLIENT_ID_SIZE]);
+    }
+    _clientList[otherName].setPublicKey(currentPublicKey);
+
+    return res;
 }
 
 bool ClientCmd::nameExists(const std::string& name){

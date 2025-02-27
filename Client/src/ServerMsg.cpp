@@ -88,9 +88,12 @@ void ServerMsg::printError(const ServerMsg& ans) {
     else if (code == ErrorCodes::SERVER_ERROR) {
         std::cerr << "SERVER_ERROR" << std::endl;
     }
-    else if (code == ErrorCodes::NO_CODE_ERROR)
-    {
+    else if (code == ErrorCodes::NO_CODE_ERROR){
         std::cerr << "NO_CODE_ERROR" << std::endl;
+    }
+    else if (code == ErrorCodes::NO_CLIENT_NAME_ERROR)
+    {
+        std::cerr << "NO_CLIENT_NAME_ERROR" << std::endl;
     }
 
 }

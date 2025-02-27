@@ -1,3 +1,5 @@
+import base64
+
 import utils
 import socket
 from _thread import *
@@ -85,9 +87,9 @@ def new_client(client):
                 print("Public key: ", pub_key)
                 prot = pack_server_prot(client_req)
                 client_req._payload_size = struct.pack("!I", const.CLIENT_ID_SIZE+const.PUBLIC_KEY_SIZE)
-                pub_key_packed = struct.pack(f"!{const.PUBLIC_KEY_SIZE}s",pub_key)
+                pub_key_packed = struct.pack(f"!{const.PUBLIC_KEY_SIZE}s",base64.b64decode(pub_key))
                 other_cid_packed = struct.pack(f"!{const.CLIENT_ID_SIZE}s", other_cid)
-                client.send(prot+client_req.get_payload_size()+pub_key_packed+other_cid_packed)
+                client.send(prot+client_req.get_payload_size()+other_cid_packed+pub_key_packed)
 
         elif req_code == const.SEND_MSG_CODE:
             cid, msg_id = client_req.send_msg_req()

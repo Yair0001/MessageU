@@ -35,6 +35,7 @@ enum ErrorCodes{
     NO_CLIENTS=0x03,
     INVALID_CID=0x04,
     SERVER_ERROR=9000,
+    NO_CODE_ERROR=9001,
 };
 
 enum RequestCodes {
@@ -43,7 +44,6 @@ enum RequestCodes {
     PUBLIC_KEY_CODE=602,
     SEND_MSG_CODE=603,
     WAITING_LIST_CODE=604,
-    NO_CODE=605,
 };
 
 enum AnswerCodes {

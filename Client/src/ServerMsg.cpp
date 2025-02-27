@@ -9,8 +9,8 @@ ServerMsg::ServerMsg(std::vector<CryptoPP::byte> msg) {
     _code.resize(CODE_SIZE);
     _payloadSize.resize(PAYLOAD_SZ_SIZE);
 
-    std::cout << "MSG: ";
-    printMsg(msg);
+    // std::cout << "MSG: ";
+    // printMsg(msg);
 
     unsigned int currOffset = 0;
 
@@ -18,21 +18,21 @@ ServerMsg::ServerMsg(std::vector<CryptoPP::byte> msg) {
     for (unsigned int i = 0; i < VERSION_SIZE; i++) {
         _version[i] = msg[currOffset + i];
     }
-    std::cout << "VERSION " << bytesToHex(_version) << std::endl;
+    // std::cout << "VERSION " << bytesToHex(_version) << std::endl;
     currOffset += VERSION_SIZE;
 
     // Extract code
     for (unsigned int i = 0; i < CODE_SIZE; i++) {
         _code[i] = msg[currOffset + i];
     }
-    std::cout << "CODE " << bytesToHex(_code) << std::endl;
+    // std::cout << "CODE " << bytesToHex(_code) << std::endl;
     currOffset += CODE_SIZE;
 
     // Extract payload size
     for (unsigned int i = 0; i < PAYLOAD_SZ_SIZE; i++) {
         _payloadSize[i] = msg[currOffset + i];
     }
-    std::cout << "Payload Size " << bytesToHex(_payloadSize) << std::endl;
+    // std::cout << "Payload Size " << bytesToHex(_payloadSize) << std::endl;
     currOffset += PAYLOAD_SZ_SIZE;
 
     // Calculate the actual payload size from _payloadSize (assuming big-endian)
@@ -48,7 +48,7 @@ ServerMsg::ServerMsg(std::vector<CryptoPP::byte> msg) {
     for (unsigned int i = 0; i < payloadSize; i++) {
         _payload[i] = msg[currOffset + i];
     }
-    std::cout << "Payload " << bytesToHex(_payload) << std::endl;
+    // std::cout << "Payload " << bytesToHex(_payload) << std::endl;
 }
 
 std::vector<CryptoPP::byte> ServerMsg::getCode() const {
@@ -83,6 +83,10 @@ void ServerMsg::printError(const ServerMsg& ans) {
     }
     else if (code == ErrorCodes::SERVER_ERROR) {
         std::cerr << "SERVER_ERROR" << std::endl;
+    }
+    else if (code == ErrorCodes::NO_CODE_ERROR)
+    {
+        std::cerr << "NO_CODE_ERROR" << std::endl;
     }
 
 }

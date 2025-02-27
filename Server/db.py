@@ -12,7 +12,7 @@ class DefensiveDb:
         self._cur = self._db.cursor()
         self._usr_count = 0
         self.create_tables()
-        self.reset_db()
+        # self.reset_db()
         self._index = self.initialize_index()
         self._clients_list = self.initialize_clients_list()
 
@@ -74,15 +74,11 @@ class DefensiveDb:
 
     def rmv_client_from_clients_list(self,cid):
         newClientsList = []
-        currListCid = b""
         for client in self._clients_list:
-            for i in range(CLIENT_ID_SIZE):
-                currListCid += b"".join(bytes([client[i]]) for i in range(CLIENT_ID_SIZE))
+            currListCid = bytes(client[:CLIENT_ID_SIZE])
             if currListCid != cid:
                 newClientsList.append(client)
-            currListCid = b""
         return newClientsList
-
 
     def add_new_message(self,cid,other_cid,msg_type,content):
         #create new unique msg_id in length 4 bytes

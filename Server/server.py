@@ -24,6 +24,7 @@ def new_client(client):
         client_req = ClientReq(data)
 
         req_code = client_req.get_code()
+        print(req_code)
         if req_code == const.REGISTER_CODE:
             cid = client_req.register_req()
             if cid == const.ERROR_USERNAME_EXISTS:
@@ -55,7 +56,7 @@ def new_client(client):
             else:
                 #Return clients_list to user
                 prot = pack_server_prot(client_req)
-                client_req._payload_size = struct.pack("!I", len(clients_list))
+                client_req._payload_size = struct.pack("!I", len(clients_list)*(const.USERNAME_LENGTH+1+const.CLIENT_ID_SIZE))
                 print("code: ", client_req.get_code())
                 print("version: ", client_req.get_version())
                 print("payload size: ", client_req.get_payload_size())

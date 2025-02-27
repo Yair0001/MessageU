@@ -22,7 +22,7 @@ std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string &command) 
             _payloadSize = getBytesAsCryptoPP(0,PAYLOAD_SZ_SIZE);
             return clientsList();
         case 130:
-            _code = getBytesAsCryptoPP(PUBLIC_KEY_SIZE,CODE_SIZE);
+            _code = getBytesAsCryptoPP(PUBLIC_KEY_CODE,CODE_SIZE);
             _payloadSize = getBytesAsCryptoPP(CLIENT_ID_SIZE,PAYLOAD_SZ_SIZE);
             _otherCid.resize(CLIENT_ID_SIZE);
             return getPublicKeyOfCid();
@@ -45,8 +45,11 @@ std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string &command) 
             _code = getBytesAsCryptoPP(EXIT,CODE_SIZE);
             break;
         default:
-            _code = getBytesAsCryptoPP(NO_CODE,CODE_SIZE);
-            break;
+            std::vector<CryptoPP::byte> res;
+            _code = getBytesAsCryptoPP(NO_CODE_ERROR,CODE_SIZE);
+            _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
+            mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
+            return res;
     }
 }
 
@@ -108,10 +111,10 @@ std::vector<CryptoPP::byte> ClientCmd::registerUser() {
         return res;
     }
 
-    std::cout << "\nADD TO FILE\n";
-    std::cout << userName << std::endl;
-    std::cout << bytesToHex(numOfBytes(msgToReceive.getPayload(),0,CLIENT_ID_SIZE)) << std::endl;
-    std::cout << Base64Wrapper::encode(rsa_private_wrapper.getPrivateKey()) << std::endl;
+    // std::cout << "\nADD TO FILE\n";
+    // std::cout << userName << std::endl;
+    // std::cout << bytesToHex(numOfBytes(msgToReceive.getPayload(),0,CLIENT_ID_SIZE)) << std::endl;
+    // std::cout << Base64Wrapper::encode(rsa_private_wrapper.getPrivateKey()) << std::endl;
 
     FILE* infoFile = fopen(INFO_FILE_NAME, "a");
     if (infoFile != nullptr) {

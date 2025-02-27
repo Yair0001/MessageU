@@ -25,6 +25,7 @@ def read_port(file):
 
 def set_up_server(port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # Allow address reuse
     sock.bind((LOCAL_HOST, port))
     print("socket binded to port", port)
     sock.listen()

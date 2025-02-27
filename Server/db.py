@@ -12,7 +12,7 @@ class DefensiveDb:
         self._cur = self._db.cursor()
         self._usr_count = 0
         self.create_tables()
-        # self.reset_db()
+        self.reset_db()
         self._index = self.initialize_index()
         self._clients_list = self.initialize_clients_list()
 
@@ -31,7 +31,7 @@ class DefensiveDb:
         for cid, user_name in self._cur.execute("SELECT ID, UserName FROM clients"):
             user_name_packed = struct.pack(f"!{const.USERNAME_LENGTH}s", bytes(user_name, 'utf-8')) + b'\x00'
             cid_unpacked = bytes.fromhex(cid)
-            self._clients_list.append(cid_unpacked + user_name_packed)
+            clients_list.append(cid_unpacked + user_name_packed)
             self._usr_count += 1
         return clients_list
 
@@ -77,9 +77,10 @@ class DefensiveDb:
         currListCid = b""
         for client in self._clients_list:
             for i in range(CLIENT_ID_SIZE):
-                currListCid += client[i]
+                currListCid += b"".join(bytes([client[i]]) for i in range(CLIENT_ID_SIZE))
             if currListCid != cid:
                 newClientsList.append(client)
+            currListCid = b""
         return newClientsList
 
 

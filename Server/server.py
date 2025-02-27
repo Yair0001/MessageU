@@ -36,6 +36,7 @@ def new_client(client):
                 print("ADDED USERNAME")
                 prot = pack_server_prot(client_req)
                 client_req._payload_size = struct.pack("!I", len(cid))
+                print(''.join('{:02x}'.format(x) for x in cid))
                 client.send(prot+client_req.get_payload_size()+cid)
 
         elif req_code == const.CLIENTS_LIST_CODE:

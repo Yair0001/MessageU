@@ -1,7 +1,5 @@
 #include "utils.h"
 
-#include <iostream>
-
 std::vector<std::string> splitString(const std::string& s, const char del) {
     std::vector<std::string> result;
     std::string::size_type start = 0;
@@ -45,8 +43,9 @@ std::string bytesToString(const std::vector<CryptoPP::byte> &bytes) {
 
 std::string bytesToHex(const std::vector<CryptoPP::byte>& bytes) {
     std::stringstream hex_stream;
+    hex_stream << std::hex << std::setfill('0'); // Set fill for leading zeros
     for (const auto byte : bytes) {
-        hex_stream << std::hex << static_cast<int>(byte);
+        hex_stream << std::setw(2) << static_cast<int>(byte);
     }
     return hex_stream.str();
 }

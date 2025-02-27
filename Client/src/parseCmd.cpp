@@ -108,10 +108,10 @@ std::vector<CryptoPP::byte> ClientCmd::registerUser() {
         return res;
     }
 
-    // std::cout << "\nADD TO FILE\n";
-    // std::cout << userName << std::endl;
-    // std::cout << bytesToHex(numOfBytes(msgToReceive.getPayload(),0,CLIENT_ID_SIZE)) << std::endl;
-    // std::cout << Base64Wrapper::encode(rsa_private_wrapper.getPrivateKey()) << std::endl;
+    std::cout << "\nADD TO FILE\n";
+    std::cout << userName << std::endl;
+    std::cout << bytesToHex(numOfBytes(msgToReceive.getPayload(),0,CLIENT_ID_SIZE)) << std::endl;
+    std::cout << Base64Wrapper::encode(rsa_private_wrapper.getPrivateKey()) << std::endl;
 
     FILE* infoFile = fopen(INFO_FILE_NAME, "a");
     if (infoFile != nullptr) {

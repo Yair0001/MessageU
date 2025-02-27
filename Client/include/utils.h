@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include <string>
+#include <iomanip>
 #include <vector>
 #include <fstream>
 #include <cryptopp/trap.h>

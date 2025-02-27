@@ -26,8 +26,8 @@ std::vector<CryptoPP::byte> ServerHandler::receiveMessage() {
         // Step 1: Read the initial 7 bytes until the payload
         std::vector<CryptoPP::byte> initialBuffer(BYTES_TILL_PAYLOAD);
         boost::asio::read(_socket, boost::asio::buffer(initialBuffer, BYTES_TILL_PAYLOAD));
-        // std::cout << "\nReceived message: " << std::endl;
-        // printMsg(initialBuffer);
+        std::cout << "\nReceived message: " << std::endl;
+        printMsg(initialBuffer);
 
         // Step 2: Extract the last 4 bytes as a big-endian integer
         std::uint32_t additionalBytes = 0;
@@ -38,13 +38,13 @@ std::vector<CryptoPP::byte> ServerHandler::receiveMessage() {
         message.insert(message.end(), initialBuffer.begin(), initialBuffer.end());
         // Step 3: Read the additional bytes
         if (additionalBytes > 0) {
-            // std::cout << "GOT " << additionalBytes << " ADDITIONAL BYTES" << std::endl;
+            std::cout << "GOT " << additionalBytes << " ADDITIONAL BYTES" << std::endl;
             std::vector<CryptoPP::byte> additionalBuffer(additionalBytes);
             boost::asio::read(_socket, boost::asio::buffer(additionalBuffer, additionalBytes));
             message.insert(message.end(), additionalBuffer.begin(), additionalBuffer.end());
             printMsg(additionalBuffer);
         }
-        // printMsg(message);
+        printMsg(message);
 
         return message;
     } catch (const std::exception& e) {

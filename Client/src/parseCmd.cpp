@@ -176,7 +176,7 @@ std::vector<CryptoPP::byte> ClientCmd::clientsList() {
         currOffset += CLIENT_ID_SIZE+NAME_SIZE;
     }
 
-    ServerMsg::printClientsList(clients);
+    ServerMsg::printClientsList(clients, _clientList);
     _code = getBytesAsCryptoPP(CLIENTS_LIST_OK,CODE_SIZE);
     _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
     mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
@@ -197,29 +197,31 @@ std::vector<CryptoPP::byte> ClientCmd::getPublicKeyOfCid(){
 
     _cid = getCidOfInfoFile(userFile);
 
-    std::string otherCid;
+    std::string otherName;
 
-    std::cout << "Enter Client ID To get public key of: ";
-    std::getline(std::cin, otherCid);
+    std::cout << "Enter User Name To get public key of: ";
+    std::getline(std::cin, otherName);
 
-    if (!otherCid.empty() && otherCid[otherCid.length() - 1] == '\n') {
-        otherCid.pop_back();
+    if (!otherName.empty() && otherName[otherName.length() - 1] == '\n') {
+        otherName.pop_back();
     }
 
-    if (otherCid.length() > CLIENT_ID_SIZE) {
-        otherCid = otherCid.substr(0, CLIENT_ID_SIZE); // Truncate input
+    if (otherName.length() > NAME_SIZE) {
+        otherName = otherName.substr(0, NAME_SIZE); // Truncate input
     }
-    else if (otherCid.length() < CLIENT_ID_SIZE){
-        std::cout << "Invalid Client ID!\n";
-        _code = getBytesAsCryptoPP(INVALID_CID, CODE_SIZE);
+
+    if (nameExists(otherName))
+    {
+        _otherCid = _clientList[otherName].getCid();
+    }
+    else
+    {
+        _code = getBytesAsCryptoPP(NO_CLIENT_NAME_ERROR, CODE_SIZE);
         _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
         mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
         return res;
     }
 
-    for (int i = 0; i < CLIENT_ID_SIZE; i++) {
-        _otherCid[i] = otherCid[i];
-    }
 
     std::vector<CryptoPP::byte> msgToSend{};
     mergeVector<CryptoPP::byte>(msgToSend, {_cid, _version, _code, _payloadSize, _otherCid});
@@ -232,5 +234,8 @@ std::vector<CryptoPP::byte> ClientCmd::getPublicKeyOfCid(){
         return res;
     }
 
+}
 
+bool ClientCmd::nameExists(const std::string& name){
+    return _clientList.find(name) != _clientList.end();
 }

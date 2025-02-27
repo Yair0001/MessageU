@@ -6,6 +6,8 @@
 #define SERVERMSG_H
 #include <vector>
 #include <cryptopp/trap.h>
+#include "client.h"
+#include <unordered_map>
 
 class ServerMsg {
 private:
@@ -15,7 +17,7 @@ private:
     std::vector<CryptoPP::byte> _payload;
 
 public:
-    ServerMsg(std::vector<CryptoPP::byte> msg);
+    explicit ServerMsg(const std::vector<CryptoPP::byte>& msg);
     std::vector<CryptoPP::byte> getCode() const;
     std::vector<CryptoPP::byte> getPayloadSizeVec() const;
     int getPayloadSizeInt() const;
@@ -23,7 +25,8 @@ public:
     static bool isValidCode(int code);
     static bool errorsExist(const ServerMsg& ans);
     static void printError(const ServerMsg& ans);
-    static void printClientsList(const std::vector<std::vector<CryptoPP::byte>>& clients);
+    static void printClientsList(const std::vector<std::vector<CryptoPP::byte>>& clients, std::unordered_map<std::string, Client>& clientList);
+
 
 };
 #endif //SERVERMSG_H

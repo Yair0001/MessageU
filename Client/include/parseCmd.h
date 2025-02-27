@@ -10,9 +10,12 @@
 #include "ServerMsg.h"
 #include <iostream>
 #include "Base64Wrapper.h"
+#include "client.h"
+#include <unordered_map>
 
 class ClientCmd {
 private:
+    std::unordered_map<std::string,Client> _clientList;
 
     ServerHandler _serverHandler;
 
@@ -36,6 +39,7 @@ public:
     std::vector<CryptoPP::byte> registerUser();
     std::vector<CryptoPP::byte> clientsList();
     std::vector<CryptoPP::byte> getPublicKeyOfCid();
+    bool nameExists(const std::string& name);
     ~ClientCmd() = default;
 
 };

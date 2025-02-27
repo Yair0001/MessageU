@@ -2,9 +2,13 @@
 // Created by yairm on 19/01/2025.
 //
 #include "ServerMsg.h"
+
+#include <unordered_map>
+
+#include "client.h"
 #include "utils.h"
 
-ServerMsg::ServerMsg(std::vector<CryptoPP::byte> msg) {
+ServerMsg::ServerMsg(const std::vector<CryptoPP::byte>& msg) {
     _version.resize(VERSION_SIZE);
     _code.resize(CODE_SIZE);
     _payloadSize.resize(PAYLOAD_SZ_SIZE);
@@ -99,7 +103,7 @@ int ServerMsg::getPayloadSizeInt() const {
     return bytesToType<int>(_payloadSize);
 }
 
-void ServerMsg::printClientsList(const std::vector<std::vector<CryptoPP::byte>>& clients) {
+void ServerMsg::printClientsList(const std::vector<std::vector<CryptoPP::byte>>& clients, std::unordered_map<std::string,Client>& clientList) {
     std::vector<CryptoPP::byte> currName{};
     std::vector<CryptoPP::byte> currCID(CLIENT_ID_SIZE);
 
@@ -112,6 +116,8 @@ void ServerMsg::printClientsList(const std::vector<std::vector<CryptoPP::byte>>&
                 currName.push_back(clients[i][j]);
             }
         }
+
+        clientList[bytesToString(currName)] = Client(currCID);
 
         std::cout << "CLIENT " << i << " Name: " << bytesToString(currName) << std::endl;
         std::cout << "CLIENT " << i << " CID: " << bytesToHex(currCID) << std::endl;

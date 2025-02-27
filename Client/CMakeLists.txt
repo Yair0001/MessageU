@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 # Add executable
 add_executable(Client
+        src/main.cpp
         src/client.cpp
         include/client.h
         src/utils.cpp

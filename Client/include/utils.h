@@ -23,6 +23,7 @@ enum ProtocolSizes{
     PAYLOAD_SZ_SIZE=4,
     NAME_SIZE=255,
     PUBLIC_KEY_SIZE=160,
+    SYM_KEY_SIZE=16,
     MSG_TYPE_SIZE=1,
     MSG_CONTENT_SIZE=4,
 };
@@ -36,6 +37,7 @@ enum ErrorCodes{
     INVALID_CID=0x04,
     SERVER_ERROR=9000,
     NO_CODE_ERROR=9001,
+    NO_CLIENT_NAME_ERROR=9002,
 };
 
 enum RequestCodes {

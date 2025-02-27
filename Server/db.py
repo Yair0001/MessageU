@@ -47,7 +47,7 @@ class DefensiveDb:
         return not(res.fetchone() is None)
 
     def is_cid_in_table(self, cid):
-        res = self._cur.execute(f"SELECT ID FROM clients WHERE ID={cid}")
+        res = self._cur.execute(f"SELECT ID FROM clients WHERE ID=?",(cid.hex(),))
         return not(res.fetchone() is None)
 
     def insert_new_user(self,user_name,public_key):
@@ -98,7 +98,7 @@ class DefensiveDb:
         res = self._cur.execute(f"SELECT ID FROM clients WHERE UserName={user_name}")
         return res.fetchone()[0]
     def get_pub_key_of_cid(self, cid):
-        res = self._cur.execute(f"SELECT PublicKey FROM clients WHERE ID={cid}")
+        res = self._cur.execute(f"SELECT PublicKey FROM clients WHERE ID=?",(cid.hex(),))
         return res.fetchone()[0]
 
 

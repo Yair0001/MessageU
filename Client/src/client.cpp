@@ -1,38 +1,20 @@
-#include <iostream>
-#include "utils.h"
-#include "parseCmd.h"
+#include "client.h"
 
-int main() {
-    const std::vector<std::string> serverInfo = readServerInfo(SERVER_INFO_FILE);
-    if (serverInfo.empty()) {
-        std::cerr << "\nError reading server info\n";
-        exit(EXIT_FAILURE);
-    }
+Client::Client(const std::vector<CryptoPP::byte>& cid){
+    _cid = cid;
+    _publicKey.resize(PUBLIC_KEY_SIZE);
+    _symKey.resize(SYM_KEY_SIZE);
+}
 
-    std::string cmd;
-    ServerHandler server_handler(serverInfo[0],std::stoi(serverInfo[1]));
-    ClientCmd client(server_handler);
-    while (cmd != "0") {
-        std::cout << "MessageU client at your service.\n\n";
-        std::cout << "110) Register\n";
-        std::cout << "120) Request for clients list\n";
-        std::cout << "130) Request for public key\n";
-        std::cout << "140) Request for waiting messages\n";
-        std::cout << "150) Send a text message\n";
-        std::cout << "151) Send a request for symmetric key\n";
-        std::cout << "152) Request for messages without waiting messages\n";
-        std::cout << "153) Send a file\n";
-        std::cout << "0) Exit client\n";
-        std::cout << "? ";
+void Client::setPublicKey(const std::vector<CryptoPP::byte>& publicKey){
+    _publicKey = publicKey;
+}
 
-        std::getline(std::cin,cmd);
+void Client::setSymKey(const std::vector<CryptoPP::byte>& symKey){
+    _symKey = symKey;
+}
 
-        std::vector<CryptoPP::byte> retValue = client.parseCommand(cmd);
-        ServerMsg ans(retValue);
-        if (ServerMsg::errorsExist(ans)) {
-            ServerMsg::printError(ans);
-        }
-    }
-
-
+std::vector<CryptoPP::byte> Client::getCid() const
+{
+    return _cid;
 }

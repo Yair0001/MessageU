@@ -82,7 +82,7 @@ void ServerMsg::printError(const ServerMsg& ans) {
     else if (code == ErrorCodes::NOT_REGISTERED) {
         std::cerr << "NOT_REGISTERED" << std::endl;
     }
-    else if (code == ErrorCodes::NO_CLIENTS) {
+    else if (code == ErrorCodes::NO_CLIENTS_ERROR) {
         std::cerr << "NO_CLIENTS" << std::endl;
     }
     else if (code == ErrorCodes::SERVER_ERROR) {
@@ -106,7 +106,7 @@ int ServerMsg::getPayloadSizeInt() const {
     return bytesToType<int>(_payloadSize);
 }
 
-void ServerMsg::printClientsList(const std::vector<std::vector<CryptoPP::byte>>& clients, std::unordered_map<std::string,Client>& clientList) {
+void ServerMsg::printClientsList(const std::vector<std::vector<CryptoPP::byte>>& clients, boost::bimap<std::string, Client>& clientList){
     std::vector<CryptoPP::byte> currName{};
     std::vector<CryptoPP::byte> currCID(CLIENT_ID_SIZE);
 
@@ -120,10 +120,62 @@ void ServerMsg::printClientsList(const std::vector<std::vector<CryptoPP::byte>>&
             }
         }
 
-        clientList[bytesToString(currName)] = Client(currCID);
+        clientList.insert({bytesToString(currName),Client(currCID)});
 
         std::cout << "CLIENT " << i << " Name: " << bytesToString(currName) << std::endl;
         std::cout << "CLIENT " << i << " CID: " << bytesToHex(currCID) << std::endl;
         currName.clear();
     }
 }
+
+void ServerMsg::printMsg(const std::vector<CryptoPP::byte>& msg, boost::bimap<std::string, Client>& clientList){
+    std::string usrName;
+    std::vector<CryptoPP::byte> usrCid{};
+    std::vector<CryptoPP::byte> msgId{};
+    std::vector<CryptoPP::byte> msgTypeBytes{};
+    std::vector<CryptoPP::byte> msgSize{};
+    std::vector<CryptoPP::byte> msgContent{};
+
+    for (unsigned int i = 0; i < msg.size(); i++){
+        if (i < CLIENT_ID_SIZE) usrCid.push_back(msg[i]);
+        else if (i < CLIENT_ID_SIZE + MSG_ID_SIZE) msgId.push_back(msg[i]);
+        else if (i < CLIENT_ID_SIZE + MSG_ID_SIZE + MSG_TYPE_SIZE) msgTypeBytes.push_back(msg[i]);
+        else if (i < CLIENT_ID_SIZE + MSG_ID_SIZE + MSG_TYPE_SIZE + MSG_SZ_SIZE) msgSize.push_back(msg[i]);
+        else msgContent.push_back(msg[i]);
+    }
+
+    for (const auto& pair : clientList.right){
+        if (pair.first.getCid() == usrCid){
+            usrName = pair.second;
+        }
+    }
+
+    const int msgTypeInt = bytesToType<int>(msgTypeBytes);
+    if (msgTypeInt == SYM_KEY_REQ){
+        std::cout << "From: " << usrName << std::endl;
+        std::cout << "Content:\n" << "Request for symmetric key\n";
+        std::cout << "-----<EOM>-----\n";
+    }
+    else if (msgTypeInt == SYM_KEY_SEND){
+        const auto it = clientList.left.find(usrName);
+        if (it != clientList.left.end()) {
+            Client clientCopy = it->second;
+            clientCopy.setSymKey(msgContent);
+
+            clientList.left.erase(it);
+            clientList.insert({usrName, clientCopy});
+        }
+
+        std::cout << "From: " << usrName << std::endl;
+        std::cout << "Content:\n" << "symmetric key received\n";
+        std::cout << bytesToHex(msgContent) << std::endl;
+        std::cout << "-----<EOM>-----\n";
+    }
+    else if (msgTypeInt == TEXT_SEND){
+        if (clientList.left.find(usrName) != clientList.left.end()){
+
+        }
+        else std::cout << "can't decrypt message\n";
+    }
+}
+// std::cout << "Content: " << bytesToHex(msgContent) << std::endl;

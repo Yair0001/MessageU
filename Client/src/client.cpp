@@ -14,7 +14,6 @@ void Client::setSymKey(const std::vector<CryptoPP::byte>& symKey){
     _symKey = symKey;
 }
 
-std::vector<CryptoPP::byte> Client::getCid() const
-{
+std::vector<CryptoPP::byte> Client::getCid() const{
     return _cid;
 }

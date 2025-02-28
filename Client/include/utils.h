@@ -25,7 +25,8 @@ enum ProtocolSizes{
     PUBLIC_KEY_SIZE=160,
     SYM_KEY_SIZE=16,
     MSG_TYPE_SIZE=1,
-    MSG_CONTENT_SIZE=4,
+    MSG_ID_SIZE=4,
+    MSG_SZ_SIZE=4
 };
 
 enum ErrorCodes{
@@ -33,11 +34,12 @@ enum ErrorCodes{
     OK=0xFF,
     ALREADY_REGISTERED=0x01,
     NOT_REGISTERED=0x02,
-    NO_CLIENTS=0x03,
+    NO_CLIENTS_ERROR=0x03,
     INVALID_CID=0x04,
     SERVER_ERROR=9000,
     NO_CODE_ERROR=9001,
     NO_CLIENT_NAME_ERROR=9002,
+    NO_MESSAGES_ERROR=9003,
 };
 
 enum RequestCodes {
@@ -46,6 +48,13 @@ enum RequestCodes {
     PUBLIC_KEY_CODE=602,
     SEND_MSG_CODE=603,
     WAITING_LIST_CODE=604,
+};
+
+enum MessageTypes{
+    SYM_KEY_REQ=1,
+    SYM_KEY_SEND=2,
+    TEXT_SEND=3,
+    FILE_SEND=4,
 };
 
 enum AnswerCodes {
@@ -61,10 +70,10 @@ std::vector<std::string> splitString(const std::string& s, char del);
 std::vector<std::string> readServerInfo(const std::string& path);
 std::string bytesToString(const std::vector<CryptoPP::byte> &bytes);
 int sumVector(const std::vector<CryptoPP::byte>& bytes);
-void printMsg(std::vector<CryptoPP::byte> msg);
-void printMsgString(std::vector<CryptoPP::byte> msg);
+void printMsg(const std::vector<CryptoPP::byte>& msg);
+void printMsgString(const std::vector<CryptoPP::byte>& msg);
 std::string bytesToHex(const std::vector<CryptoPP::byte>& bytes);
-std::vector<CryptoPP::byte> numOfBytes(std::vector<CryptoPP::byte> bytes, int start, int end);
+std::vector<CryptoPP::byte> numOfBytes(const std::vector<CryptoPP::byte>& bytes, int start, int end);
 std::vector<CryptoPP::byte> stringToBytes(const std::string& str);
 std::vector<std::string> getFileContents(std::ifstream& file);
 std::vector<CryptoPP::byte> hexStrToBytes(const std::string& hexString);

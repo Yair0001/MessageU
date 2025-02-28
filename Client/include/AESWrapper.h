@@ -5,7 +5,7 @@
 class AESWrapper
 {
 public:
-    static const unsigned int DEFAULT_KEYLENGTH = 16;
+    static constexpr unsigned int DEFAULT_KEYLENGTH = 16;
 private:
     unsigned char _key[DEFAULT_KEYLENGTH];
     AESWrapper(const AESWrapper& aes);

@@ -23,14 +23,14 @@ std::vector<std::string> readServerInfo(const std::string& path) {
     return result;
 }
 
-void printMsg(std::vector<CryptoPP::byte> msg) {
+void printMsg(const std::vector<CryptoPP::byte>& msg) {
     for (const auto& byte : msg) {
         std::cout << std::hex << std::uppercase << static_cast<int>(byte);
     }
     std::cout << std::dec << std::endl;
 }
 
-void printMsgString(std::vector<CryptoPP::byte> msg) {
+void printMsgString(const std::vector<CryptoPP::byte>& msg) {
     for (const auto& byte : msg) {
         std::cout << static_cast<char>(byte);
     }
@@ -52,13 +52,13 @@ std::string bytesToHex(const std::vector<CryptoPP::byte>& bytes) {
 
 int sumVector(const std::vector<CryptoPP::byte>& bytes) {
     int result = 0;
-    for (int i = 0; i < bytes.size(); i++) {
-        result += bytes[i];
+    for (const unsigned char byte : bytes) {
+        result += byte;
     }
     return result;
 }
 
-std::vector<CryptoPP::byte> numOfBytes(std::vector<CryptoPP::byte> bytes, int start, int end) {
+std::vector<CryptoPP::byte> numOfBytes(const std::vector<CryptoPP::byte>& bytes, const int start, const int end) {
     std::vector<CryptoPP::byte> result;
     for (int i = start; i < end; i++) {
         result.push_back(bytes[i]);
@@ -95,7 +95,7 @@ std::vector<CryptoPP::byte> hexStrToBytes(const std::string& hexString) {
     for (size_t i = 0; i < hexString.length(); i += 2) {
         // Convert each hex pair to a CryptoPP::byte
         std::string byteString = hexString.substr(i, 2);
-        CryptoPP::byte byte = static_cast<CryptoPP::byte>(std::stoul(byteString, nullptr, 16));
+        auto byte = static_cast<CryptoPP::byte>(std::stoul(byteString, nullptr, 16));
         byteVector.push_back(byte);
     }
 

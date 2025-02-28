@@ -7,7 +7,7 @@ ServerHandler::ServerHandler(const std::string &ip, int port): _socket(_ioContex
     _ip = ip;
     _port = port;
     boost::asio::ip::tcp::resolver resolver(_ioContext);
-    auto endPoints = resolver.resolve(ip, std::to_string(port));
+    const auto endPoints = resolver.resolve(ip, std::to_string(port));
     boost::asio::connect(_socket, endPoints);
 }
 

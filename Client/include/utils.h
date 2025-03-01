@@ -40,6 +40,7 @@ enum ErrorCodes{
     NO_CODE_ERROR=9001,
     NO_CLIENT_NAME_ERROR=9002,
     NO_MESSAGES_ERROR=9003,
+    NO_PUBLIC_KEY_ERROR=9004,
 };
 
 enum RequestCodes {

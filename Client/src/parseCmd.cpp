@@ -6,10 +6,12 @@ ClientCmd::ClientCmd(ServerHandler &serverHandler)
     _version.resize(VERSION_SIZE);
     _code.resize(CODE_SIZE);
     _payloadSize.resize(PAYLOAD_SZ_SIZE);
+    _msgType.resize(MSG_TYPE_SIZE);
     _version = getBytesAsCryptoPP(CLIENT_VERSION,VERSION_SIZE);
 }
 
 std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string &command) {
+    std::vector<CryptoPP::byte> res;
     switch (std::stoi(command)) {
         case 110:
             _userName.resize(NAME_SIZE);
@@ -30,22 +32,36 @@ std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string &command) 
             _code = getBytesAsCryptoPP(WAITING_LIST_CODE,CODE_SIZE);
             _payloadSize = getBytesAsCryptoPP(0,PAYLOAD_SZ_SIZE);
             return waitingMsgs();
-            break;
         case 150:
-        case 151:
-        case 152:
-        case 153:
             _code = getBytesAsCryptoPP(SEND_MSG_CODE,CODE_SIZE);
-        // need to set payload size later because of message type
+            _msgType = getBytesAsCryptoPP(TEXT_SEND,MSG_TYPE_SIZE);
             _otherCid.resize(CLIENT_ID_SIZE);
-            _msgType.resize(MSG_TYPE_SIZE);
             _contentSize.resize(MSG_SZ_SIZE);
-            break;
+            return sendMsg();
+        case 151:
+            _code = getBytesAsCryptoPP(SEND_MSG_CODE,CODE_SIZE);
+            _msgType = getBytesAsCryptoPP(SYM_KEY_SEND,MSG_TYPE_SIZE);
+            _otherCid.resize(CLIENT_ID_SIZE);
+            _contentSize.resize(MSG_SZ_SIZE);
+            return sendMsg();
+        case 152:
+            _code = getBytesAsCryptoPP(SEND_MSG_CODE,CODE_SIZE);
+            _msgType = getBytesAsCryptoPP(SYM_KEY_REQ,MSG_TYPE_SIZE);
+            _otherCid.resize(CLIENT_ID_SIZE);
+            _contentSize.resize(MSG_SZ_SIZE);
+            return sendMsg();
+        case 153:
+            _msgType = getBytesAsCryptoPP(FILE_SEND,MSG_TYPE_SIZE);
+            _code = getBytesAsCryptoPP(SEND_MSG_CODE,CODE_SIZE);
+            // need to set payload size later because of message type
+            _otherCid.resize(CLIENT_ID_SIZE);
+            _contentSize.resize(MSG_SZ_SIZE);
+            return sendMsg();
         case 0:
             _code = getBytesAsCryptoPP(EXIT,CODE_SIZE);
-            break;
+            _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
+            mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
         default:
-            std::vector<CryptoPP::byte> res;
             _code = getBytesAsCryptoPP(NO_CODE_ERROR,CODE_SIZE);
             _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
             mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
@@ -118,8 +134,10 @@ std::vector<CryptoPP::byte> ClientCmd::registerUser() {
 
     FILE* infoFile = fopen(INFO_FILE_NAME, "a");
     if (infoFile != nullptr) {
+        std::vector<CryptoPP::byte> curCid = numOfBytes(msgToReceive.getPayload(),0,CLIENT_ID_SIZE);
+
         fprintf(infoFile, "%s\n",userName.c_str());
-        fprintf(infoFile, "%s\n",bytesToHex(numOfBytes(msgToReceive.getPayload(),0,CLIENT_ID_SIZE)).c_str());
+        fprintf(infoFile, "%s\n",bytesToHex(curCid).c_str());
         fprintf(infoFile, "%s\n",Base64Wrapper::encode(rsa_private_wrapper.getPrivateKey()).c_str());
         fclose(infoFile);
 
@@ -194,8 +212,6 @@ std::vector<CryptoPP::byte> ClientCmd::getPublicKeyOfCid(){
         mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
         return res;
     }
-
-    _cid = getCidOfInfoFile(userFile);
 
     std::string otherName;
 
@@ -306,9 +322,119 @@ std::vector<CryptoPP::byte> ClientCmd::waitingMsgs()
         RSAPrivateWrapper privKey(bytesToString(_privateKey));
         ServerMsg::printMsg(currMessage, privKey, _clientList);
     }
-
-
     return res;
+}
+
+std::vector<CryptoPP::byte> ClientCmd::sendMsg(){
+    std::vector<CryptoPP::byte> res;
+
+    std::ifstream userFile(INFO_FILE_NAME);
+    if (!userFile.is_open()) {
+        std::cout << "FILE DIDNT OPEN\n";
+        _code = getBytesAsCryptoPP(NOT_REGISTERED, CODE_SIZE);
+        _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
+        mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
+        return res;
+    }
+
+    _cid = getCidOfInfoFile(userFile);
+
+    std::string otherName;
+
+    std::cout << "Enter Destination User Name: ";
+    std::getline(std::cin, otherName);
+
+    if (!otherName.empty() && otherName[otherName.length() - 1] == '\n') {
+        otherName.pop_back();
+    }
+
+    if (otherName.length() > NAME_SIZE) {
+        otherName = otherName.substr(0, NAME_SIZE); // Truncate input
+    }
+
+    if (nameExists(otherName))
+    {
+        _otherCid = _clientList.left.find(otherName)->second.getCid();
+    }
+    else
+    {
+        _code = getBytesAsCryptoPP(NO_CLIENT_NAME_ERROR, CODE_SIZE);
+        _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
+        mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
+        return res;
+    }
+
+    const int msgType = bytesToType<int>(_msgType);
+
+    if (msgType == SYM_KEY_REQ){
+        // need to check if public key exists
+        _contentSize = getBytesAsCryptoPP(0, MSG_SZ_SIZE);
+        _payloadSize = getBytesAsCryptoPP(_otherCid.size()+_msgType.size()+_contentSize.size(),PAYLOAD_SZ_SIZE);
+        mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize, _otherCid,_msgType,_contentSize});
+        return res;
+    }
+    if (msgType == SYM_KEY_SEND){
+        std::string curUsrName;
+        for (const auto& pair : _clientList.right){
+            if (pair.first.getCid() == _cid){
+                curUsrName = pair.second;
+            }
+        }
+
+        const auto curClient = _clientList.left.find(curUsrName);
+        const auto destClient = _clientList.left.find(otherName);
+        Client curClientCopy = curClient->second;
+        Client destClientCopy = destClient->second;
+        if (destClientCopy.pubKeyExists())
+        {
+            AESWrapper createSymKey{};
+            curClientCopy.setSymKey(stringToBytes(std::string(reinterpret_cast<const char*>(createSymKey.getKey()))));
+            _clientList.left.erase(curClient);
+            _clientList.insert({curUsrName, curClientCopy});
+
+            std::vector<CryptoPP::byte> destClientPubKey = destClientCopy.getPublicKey();
+            std::vector<CryptoPP::byte> curClientSymKey = curClientCopy.getSymKey();
+
+            AESWrapper symKey(reinterpret_cast<const unsigned char*>(bytesToString(curClientSymKey).c_str()),
+                              SYM_KEY_SIZE);
+            std::string encryptedSymKey = symKey.encrypt(bytesToString(destClientPubKey).c_str(), SYM_KEY_SIZE);
+
+            _msgContent = stringToBytes(encryptedSymKey);
+            _contentSize = getBytesAsCryptoPP(_msgContent.size(), MSG_SZ_SIZE);
+            _payloadSize = getBytesAsCryptoPP(
+                _otherCid.size() + _msgType.size() + _contentSize.size() + _msgContent.size(), PAYLOAD_SZ_SIZE);
+            mergeVector<CryptoPP::byte>(res, {
+                                            _version, _code, _payloadSize, _otherCid, _msgType, _contentSize,
+                                            _msgContent
+                                        });
+            return res;
+        }
+        std::cout << "user didn't ask for public key of user requested yet";
+        _code = getBytesAsCryptoPP(NO_PUBLIC_KEY_ERROR, CODE_SIZE);
+        _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
+        mergeVector<CryptoPP::byte>(res,{_version,_code, _payloadSize});
+        return res;
+    }
+    if (msgType == TEXT_SEND){
+        std::string text;
+
+        std::cout << "Enter Message to send:";
+        std::getline(std::cin, text);
+
+        const auto destClient = _clientList.left.find(otherName);
+        AESWrapper symKey(reinterpret_cast<const unsigned char*>(bytesToString(destClient->second.getSymKey()).c_str()),SYM_KEY_SIZE);
+
+        std::string encryptedText = symKey.encrypt(text.c_str(), text.size());
+
+        _msgContent = stringToBytes(encryptedText);
+        _contentSize = getBytesAsCryptoPP(_msgContent.size(), MSG_SZ_SIZE);
+        _payloadSize = getBytesAsCryptoPP(_otherCid.size() + _msgType.size() + _contentSize.size() + _msgContent.size(),PAYLOAD_SZ_SIZE);
+        mergeVector<CryptoPP::byte>(res, {_version, _code, _payloadSize, _otherCid, _msgType, _contentSize, _msgContent});
+        return res;
+    }
+
+    //if i want to implement file send;
+    return {};
 }
 
 bool ClientCmd::nameExists(const std::string& name){

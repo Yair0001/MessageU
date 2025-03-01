@@ -144,9 +144,6 @@ void ServerMsg::printMsg(const std::vector<CryptoPP::byte>& msg, RSAPrivateWrapp
         else msgContent.push_back(msg[i]);
     }
 
-    // handle msgContent decryption
-
-
     for (const auto& pair : clientList.right){
         if (pair.first.getCid() == usrCid){
             usrName = pair.second;

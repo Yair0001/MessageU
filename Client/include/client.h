@@ -28,5 +28,7 @@ public:
     std::vector<CryptoPP::byte> getSymKey() const;
     bool pubKeyExists() const;
     bool symKeyExists() const;
+
+    bool operator<(const Client& other) const;
 };
 #endif //CLIENT_H

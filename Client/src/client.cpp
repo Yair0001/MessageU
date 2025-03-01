@@ -31,7 +31,10 @@ bool Client::pubKeyExists() const{
     return _hasPublicKey;
 }
 
-bool Client::symKeyExists() const
-{
+bool Client::symKeyExists() const{
     return _hasSymKey;
+}
+
+bool Client::operator<(const Client& other) const{
+    return bytesToType<int>(_cid) < bytesToType<int>(other._cid);
 }

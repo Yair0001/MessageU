@@ -438,5 +438,5 @@ std::vector<CryptoPP::byte> ClientCmd::sendMsg(){
 }
 
 bool ClientCmd::nameExists(const std::string& name){
-    return _clientList.find(name) != _clientList.end();
+    return _clientList.left.find(name) != _clientList.left.end();
 }

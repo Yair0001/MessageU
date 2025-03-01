@@ -39,7 +39,7 @@ std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string &command) 
         // need to set payload size later because of message type
             _otherCid.resize(CLIENT_ID_SIZE);
             _msgType.resize(MSG_TYPE_SIZE);
-            _contentSize.resize(MSG_CONTENT_SIZE);
+            _contentSize.resize(MSG_SZ_SIZE);
             break;
         case 0:
             _code = getBytesAsCryptoPP(EXIT,CODE_SIZE);
@@ -212,7 +212,7 @@ std::vector<CryptoPP::byte> ClientCmd::getPublicKeyOfCid(){
 
     if (nameExists(otherName))
     {
-        _otherCid = _clientList[otherName].getCid();
+        _otherCid = _clientList.left.find(otherName)->second.getCid();
     }
     else
     {
@@ -244,7 +244,13 @@ std::vector<CryptoPP::byte> ClientCmd::getPublicKeyOfCid(){
     {
         currentPublicKey.push_back(_payload[i+CLIENT_ID_SIZE]);
     }
-    _clientList[otherName].setPublicKey(currentPublicKey);
+
+    auto it = _clientList.left.find(otherName);
+    if (it != _clientList.left.end()) {
+        Client updatedClient = it->second;  // Copy the existing client
+        updatedClient.setPublicKey(currentPublicKey);  // Modify it
+        _clientList.left.replace_data(it, updatedClient);  // Replace in the bimap
+    }
 
     return res;
 }
@@ -296,7 +302,9 @@ std::vector<CryptoPP::byte> ClientCmd::waitingMsgs()
             currMsgContentSize.push_back(ansPayload[i+j]);
         }
         i+=j;
-        ServerMsg::printMsg(currMessage, _clientList);
+
+        RSAPrivateWrapper privKey(bytesToString(_privateKey));
+        ServerMsg::printMsg(currMessage, privKey, _clientList);
     }
 
 

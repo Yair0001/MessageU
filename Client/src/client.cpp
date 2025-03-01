@@ -8,6 +8,7 @@ Client::Client(const std::vector<CryptoPP::byte>& cid){
 
 void Client::setPublicKey(const std::vector<CryptoPP::byte>& publicKey){
     _publicKey = publicKey;
+    _hasPublicKey = true;
 }
 
 void Client::setSymKey(const std::vector<CryptoPP::byte>& symKey){
@@ -16,4 +17,21 @@ void Client::setSymKey(const std::vector<CryptoPP::byte>& symKey){
 
 std::vector<CryptoPP::byte> Client::getCid() const{
     return _cid;
+}
+
+std::vector<CryptoPP::byte> Client::getPublicKey() const{
+    return _publicKey;
+}
+
+std::vector<CryptoPP::byte> Client::getSymKey() const{
+    return _symKey;
+}
+
+bool Client::pubKeyExists() const{
+    return _hasPublicKey;
+}
+
+bool Client::symKeyExists() const
+{
+    return _hasSymKey;
 }

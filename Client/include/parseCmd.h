@@ -42,6 +42,7 @@ public:
     std::vector<CryptoPP::byte> clientsList();
     std::vector<CryptoPP::byte> getPublicKeyOfCid();
     std::vector<CryptoPP::byte> waitingMsgs();
+
     bool nameExists(const std::string& name);
     ~ClientCmd() = default;
 

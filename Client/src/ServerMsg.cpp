@@ -128,7 +128,7 @@ void ServerMsg::printClientsList(const std::vector<std::vector<CryptoPP::byte>>&
     }
 }
 
-void ServerMsg::printMsg(const std::vector<CryptoPP::byte>& msg, boost::bimap<std::string, Client>& clientList){
+void ServerMsg::printMsg(const std::vector<CryptoPP::byte>& msg, RSAPrivateWrapper& privateKey, boost::bimap<std::string, Client>& clientList){
     std::string usrName;
     std::vector<CryptoPP::byte> usrCid{};
     std::vector<CryptoPP::byte> msgId{};
@@ -144,6 +144,9 @@ void ServerMsg::printMsg(const std::vector<CryptoPP::byte>& msg, boost::bimap<st
         else msgContent.push_back(msg[i]);
     }
 
+    // handle msgContent decryption
+
+
     for (const auto& pair : clientList.right){
         if (pair.first.getCid() == usrCid){
             usrName = pair.second;
@@ -152,15 +155,23 @@ void ServerMsg::printMsg(const std::vector<CryptoPP::byte>& msg, boost::bimap<st
 
     const int msgTypeInt = bytesToType<int>(msgTypeBytes);
     if (msgTypeInt == SYM_KEY_REQ){
-        std::cout << "From: " << usrName << std::endl;
-        std::cout << "Content:\n" << "Request for symmetric key\n";
-        std::cout << "-----<EOM>-----\n";
+        if (clientList.left.find(usrName)->second.pubKeyExists()){
+            std::cout << "From: " << usrName << std::endl;
+            std::cout << "Content:\n" << "Request for symmetric key\n";
+            std::cout << "-----<EOM>-----\n";
+        }
+        else{
+            std::cout << "Public key does not exist\n";
+        }
+
     }
     else if (msgTypeInt == SYM_KEY_SEND){
         const auto it = clientList.left.find(usrName);
+        const std::string msgContentDecrypted = privateKey.decrypt(bytesToString(msgContent));
         if (it != clientList.left.end()) {
             Client clientCopy = it->second;
-            clientCopy.setSymKey(msgContent);
+
+            clientCopy.setSymKey(stringToBytes(msgContentDecrypted));
 
             clientList.left.erase(it);
             clientList.insert({usrName, clientCopy});
@@ -168,14 +179,25 @@ void ServerMsg::printMsg(const std::vector<CryptoPP::byte>& msg, boost::bimap<st
 
         std::cout << "From: " << usrName << std::endl;
         std::cout << "Content:\n" << "symmetric key received\n";
-        std::cout << bytesToHex(msgContent) << std::endl;
+        std::cout << msgContentDecrypted << std::endl;
         std::cout << "-----<EOM>-----\n";
     }
     else if (msgTypeInt == TEXT_SEND){
         if (clientList.left.find(usrName) != clientList.left.end()){
+            if (clientList.left.find(usrName)->second.symKeyExists()){
+                AESWrapper symKey(reinterpret_cast<const unsigned char*>(bytesToString(clientList.left.find(usrName)->second.getSymKey()).c_str()),SYM_KEY_SIZE);
 
+                std::string msgContentDecrypted = bytesToString(msgContent);
+                msgContentDecrypted = symKey.decrypt(msgContentDecrypted.c_str(),msgContentDecrypted.length());
+
+                std::cout << "From: " << usrName << std::endl;
+                std::cout << "Content:\n" << msgContentDecrypted << std::endl;
+                std::cout << "-----<EOM>-----\n";
+
+            }
+            else{
+                std::cout << "can't decrypt message" << std::endl;
+            }
         }
-        else std::cout << "can't decrypt message\n";
     }
 }
-// std::cout << "Content: " << bytesToHex(msgContent) << std::endl;

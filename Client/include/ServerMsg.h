@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <boost/bimap.hpp>
 #include "AESWrapper.h"
+#include "RSAWrapper.h"
 
 class ServerMsg {
 private:
@@ -28,7 +29,7 @@ public:
     static bool errorsExist(const ServerMsg& ans);
     static void printError(const ServerMsg& ans);
     static void printClientsList(const std::vector<std::vector<CryptoPP::byte>>& clients, boost::bimap<std::string, Client>& clientList);
-    static void printMsg(const std::vector<CryptoPP::byte>& msg, boost::bimap<std::string, Client>& clientList);
+    static void printMsg(const std::vector<CryptoPP::byte>& msg, RSAPrivateWrapper& privateKey, boost::bimap<std::string, Client>& clientList);
 
 
 };

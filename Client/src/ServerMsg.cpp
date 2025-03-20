@@ -8,13 +8,14 @@
 #include "client.h"
 #include "utils.h"
 
+/**
+ * @brief Constructs a ServerMsg object from a vector of bytes.
+ * @param msg The vector of bytes representing the server message.
+ */
 ServerMsg::ServerMsg(const std::vector<CryptoPP::byte>& msg) {
     _version.resize(VERSION_SIZE);
     _code.resize(CODE_SIZE);
     _payloadSize.resize(PAYLOAD_SZ_SIZE);
-
-    // std::cout << "MSG: ";
-    // printMsg(msg);
 
     unsigned int currOffset = 0;
 
@@ -22,21 +23,18 @@ ServerMsg::ServerMsg(const std::vector<CryptoPP::byte>& msg) {
     for (unsigned int i = 0; i < VERSION_SIZE; i++) {
         _version[i] = msg[currOffset + i];
     }
-    // std::cout << "VERSION " << bytesToHex(_version) << std::endl;
     currOffset += VERSION_SIZE;
 
     // Extract code
     for (unsigned int i = 0; i < CODE_SIZE; i++) {
         _code[i] = msg[currOffset + i];
     }
-    // std::cout << "CODE " << bytesToHex(_code) << std::endl;
     currOffset += CODE_SIZE;
 
     // Extract payload size
     for (unsigned int i = 0; i < PAYLOAD_SZ_SIZE; i++) {
         _payloadSize[i] = msg[currOffset + i];
     }
-    // std::cout << "Payload Size " << bytesToHex(_payloadSize) << std::endl;
     currOffset += PAYLOAD_SZ_SIZE;
 
     // Calculate the actual payload size from _payloadSize (assuming big-endian)
@@ -52,20 +50,38 @@ ServerMsg::ServerMsg(const std::vector<CryptoPP::byte>& msg) {
     for (unsigned int i = 0; i < payloadSize; i++) {
         _payload[i] = msg[currOffset + i];
     }
-    // std::cout << "Payload " << bytesToHex(_payload) << std::endl;
 }
 
+/**
+ * @brief Retrieves the command code from the server message.
+ * @return A vector of bytes representing the command code.
+ */
 std::vector<CryptoPP::byte> ServerMsg::getCode() const {
     return _code;
 }
 
+/**
+ * @brief Retrieves the payload from the server message.
+ * @return A vector of bytes representing the payload.
+ */
 std::vector<CryptoPP::byte> ServerMsg::getPayload() const {
     return _payload;
 }
 
+/**
+ * @brief Checks if the command code is valid.
+ * @param code The command code to check.
+ * @return True if the command code is valid, false otherwise.
+ */
 bool ServerMsg::isValidCode(const int code) {
     return code == AnswerCodes::REGISTER_OK || code == AnswerCodes::CLIENTS_LIST_OK || code == AnswerCodes::PUBLIC_KEY_OK || code == AnswerCodes::SEND_MSG_OK || code == AnswerCodes::WAITING_LIST_OK;
 }
+
+/**
+ * @brief Checks if there are errors in the server message.
+ * @param ans The server message to check.
+ * @return True if there are errors, false otherwise.
+ */
 bool ServerMsg::errorsExist(const ServerMsg& ans) {
     const int code = bytesToType<int>(ans.getCode());
     if (isValidCode(code) == false) {
@@ -74,6 +90,10 @@ bool ServerMsg::errorsExist(const ServerMsg& ans) {
     return false;
 }
 
+/**
+ * @brief Prints the error message from the server message.
+ * @param ans The server message containing the error.
+ */
 void ServerMsg::printError(const ServerMsg& ans) {
     const int code = bytesToType<int>(ans.getCode());
     if (code == ErrorCodes::ALREADY_REGISTERED) {
@@ -95,17 +115,49 @@ void ServerMsg::printError(const ServerMsg& ans) {
     {
         std::cerr << "NO_CLIENT_NAME_ERROR" << std::endl;
     }
-
+    else if (code == ErrorCodes::NO_MESSAGES_ERROR)
+    {
+        std::cerr << "NO_MESSAGES_ERROR" << std::endl;
+    }
+    else if (code == ErrorCodes::NO_SYM_KEY_ERROR)
+    {
+        std::cerr << "NO_SYM_KEY_ERROR" << std::endl;
+    }
+    else if (code == ErrorCodes::NO_PUBLIC_KEY_ERROR)
+    {
+        std::cerr << "NO_PUBLIC_KEY_ERROR" << std::endl;
+    }
+    else if (code == ErrorCodes::SAME_CLIENT_ERROR)
+    {
+        std::cerr << "SAME_CLIENT_ERROR" << std::endl;
+    }
+    else if (code == ErrorCodes::NO_CLIENTS_LIST_ERROR)
+    {
+        std::cerr << "NO_CLIENTS_LIST_ERROR" << std::endl;
+    }
 }
 
+/**
+ * @brief Retrieves the payload size as a vector of bytes.
+ * @return A vector of bytes representing the payload size.
+ */
 std::vector<CryptoPP::byte> ServerMsg::getPayloadSizeVec() const {
     return _payloadSize;
 }
 
+/**
+ * @brief Retrieves the payload size as an integer.
+ * @return The payload size as an integer.
+ */
 int ServerMsg::getPayloadSizeInt() const {
     return bytesToType<int>(_payloadSize);
 }
 
+/**
+ * @brief Prints the list of clients.
+ * @param clients The list of clients.
+ * @param clientList The bimap of client names and Client objects.
+ */
 void ServerMsg::printClientsList(const std::vector<std::vector<CryptoPP::byte>>& clients, boost::bimap<std::string, Client>& clientList){
     std::vector<CryptoPP::byte> currName{};
     std::vector<CryptoPP::byte> currCID(CLIENT_ID_SIZE);
@@ -128,6 +180,12 @@ void ServerMsg::printClientsList(const std::vector<std::vector<CryptoPP::byte>>&
     }
 }
 
+/**
+ * @brief Prints the message content.
+ * @param msg The message content.
+ * @param privateKey The private key for decryption.
+ * @param clientList The bimap of client names and Client objects.
+ */
 void ServerMsg::printMsg(const std::vector<CryptoPP::byte>& msg, RSAPrivateWrapper& privateKey, boost::bimap<std::string, Client>& clientList){
     std::string usrName;
     std::vector<CryptoPP::byte> usrCid{};

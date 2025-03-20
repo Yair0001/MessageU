@@ -36,11 +36,20 @@ class DefensiveDb:
         return clients_list
 
     def get_top_msg_by_cid(self,to_cid):
-        res = self._cur.execute(f"SELECT FromClient,ID,Type,Content FROM message WHERE FromClient={to_cid}")
-        if res.fetchone() is None:
+        self._cur.execute(
+            "SELECT FromClient, ID, Type, Content FROM messages WHERE ToClient = ?",
+            (to_cid.hex(),)
+        )
+
+        res = self._cur.fetchone()
+        print(f"DEBUG: res = {res} (type: {type(res)})")
+
+        if res is None:
             return const.ERROR_NO_WAITING_MSGS
-        else:
-            return res.fetchone()
+
+        self._cur.execute("DELETE FROM messages WHERE ToClient = ?", (to_cid.hex(),))
+        self._db.commit()
+        return res
 
     def is_username_in_table(self, user_name):
         res = self._cur.execute(f"SELECT UserName FROM clients WHERE UserName='{user_name}'")
@@ -81,13 +90,17 @@ class DefensiveDb:
         return newClientsList
 
     def add_new_message(self,cid,other_cid,msg_type,content):
-        #create new unique msg_id in length 4 bytes
+        # Create new unique msg_id (4 bytes in length)
         self._index += 1
-        self._cur.execute(f"""
-        INSERT INTO messages
-        VALUES({self._index},{other_cid},{cid},{msg_type},{content})
-        """)
-        return other_cid,self._index
+
+        # Use a parameterized query
+        self._cur.execute("""
+            INSERT INTO messages (ID, ToClient, FromClient, Type, Content) 
+            VALUES (?, ?, ?, ?, ?)
+        """, (self._index, other_cid.hex(), cid.hex(), struct.unpack("!B", msg_type)[0], content.hex()))  # Convert `other_cid` to hex string
+        self._db.commit()
+
+        return other_cid, self._index
 
     def reset_db(self):
         self._cur.execute("DROP TABLE clients")

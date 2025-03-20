@@ -26,7 +26,8 @@ def new_client(client):
         client_req = ClientReq(data)
 
         req_code = client_req.get_code()
-        print(req_code)
+        print(f"Code: {req_code}")
+
         if req_code == const.REGISTER_CODE:
             cid = client_req.register_req()
             if cid == const.ERROR_USERNAME_EXISTS:
@@ -103,6 +104,16 @@ def new_client(client):
             waiting_msgs = client_req.waiting_msgs_req()
             if waiting_msgs == const.ERROR_NO_WAITING_MSGS:
                 print("NO MESSAGES FOR YOU NIGGER")
+                client_req._code = const.ERROR_SERVER
+                prot = pack_server_prot(client_req)
+                client_req._payload_size = struct.pack("!I", 0)
+                print("code: ", client_req.get_code())
+                print("version: ", client_req.get_version())
+                print("payload size: ", client_req.get_payload_size())
+                print("payload len: ", len(client_req.get_payload_size()))
+
+                client.send(prot+client_req.get_payload_size())
+
             else:
                 #Return all messages to client
                 prot = pack_server_prot(client_req)

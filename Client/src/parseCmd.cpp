@@ -49,7 +49,7 @@ std::vector<CryptoPP::byte> ClientCmd::parseCommand(const std::string& command, 
         _code = getBytesAsCryptoPP(PUBLIC_KEY_CODE, CODE_SIZE);
         _payloadSize = getBytesAsCryptoPP(CLIENT_ID_SIZE, PAYLOAD_SZ_SIZE);
         _otherCid.resize(CLIENT_ID_SIZE);
-        return getPublicKeyOfCid();
+        return getPublicKeyOfCid("");
     case 140:
         if (!_gotClientsList)
         {
@@ -268,6 +268,21 @@ std::vector<CryptoPP::byte> ClientCmd::clientsList()
     }
 
     ServerMsg::printClientsList(clients, _clientList);
+
+    std::vector<CryptoPP::byte> currName{};
+    for (unsigned int i = 0; i < clients.size(); i++)
+    {
+        for (unsigned int j = 0; j < clients[i].size(); j++) {
+            if (j < CLIENT_ID_SIZE) {
+            }
+            else if (clients[i][j] != 0x00) {
+                currName.push_back(clients[i][j]);
+            }
+        }
+        getPublicKeyOfCid(bytesToString(currName));
+        currName.clear();
+    }
+
     _code = getBytesAsCryptoPP(CLIENTS_LIST_OK, CODE_SIZE);
     _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
     mergeVector<CryptoPP::byte>(res, {_version, _code, _payloadSize});
@@ -278,7 +293,7 @@ std::vector<CryptoPP::byte> ClientCmd::clientsList()
  * @brief Retrieves the public key of a client ID and returns the corresponding byte vector.
  * @return A vector of bytes representing the get public key command.
  */
-std::vector<CryptoPP::byte> ClientCmd::getPublicKeyOfCid()
+std::vector<CryptoPP::byte> ClientCmd::getPublicKeyOfCid(std::string name="")
 {
     std::vector<CryptoPP::byte> res;
 
@@ -292,10 +307,13 @@ std::vector<CryptoPP::byte> ClientCmd::getPublicKeyOfCid()
         return res;
     }
 
-    std::string otherName;
 
-    std::cout << "Enter User Name To get public key of: ";
-    std::getline(std::cin, otherName);
+    std::string otherName = name;
+    if (otherName == "")
+    {
+        std::cout << "Enter User Name To get public key of: ";
+        std::getline(std::cin, otherName);
+    }
 
     if (!otherName.empty() && otherName[otherName.length() - 1] == '\n')
     {
@@ -393,7 +411,7 @@ std::vector<CryptoPP::byte> ClientCmd::waitingMsgs()
     int ansPayloadSize = msgToReceive.getPayloadSizeInt();
     std::vector<CryptoPP::byte> currMsgContentSize;
     std::vector<CryptoPP::byte> currMessage{};
-    size_t i = VERSION_SIZE+CODE_SIZE+PAYLOAD_SZ_SIZE;
+    size_t i = 0;
     while (i < ansPayloadSize)
     {
         size_t j;
@@ -413,8 +431,11 @@ std::vector<CryptoPP::byte> ClientCmd::waitingMsgs()
         i += j;
 
         RSAPrivateWrapper privKey(Base64Wrapper::decode(bytesToString(_privateKey)));
-        ServerMsg::printMsg(currMessage, privKey, _clientList);
+        ServerMsg::printMsg(currMessage, privKey, _clientList, _hasAskedForSymKey);
     }
+    _code = getBytesAsCryptoPP(WAITING_LIST_OK, CODE_SIZE);
+    _payloadSize = getBytesAsCryptoPP(0, PAYLOAD_SZ_SIZE);
+    mergeVector<CryptoPP::byte>(res, {_version, _code, _payloadSize});
     return res;
 }
 
@@ -506,8 +527,6 @@ std::vector<CryptoPP::byte> ClientCmd::sendMsg()
         }
 
         // send to server
-        std::cout << bytesToType<int>(_code) << "\n";
-
         std::vector<CryptoPP::byte> msgToSend{};
         _contentSize = getBytesAsCryptoPP(0, MSG_SZ_SIZE);
         _payloadSize = getBytesAsCryptoPP(_otherCid.size() + _msgType.size() + _contentSize.size() + _msgContent.size(), PAYLOAD_SZ_SIZE);
@@ -545,6 +564,7 @@ std::vector<CryptoPP::byte> ClientCmd::sendMsg()
         const auto destClient = _clientList.left.find(otherName);
         Client curClientCopy = curClient->second;
         Client destClientCopy = destClient->second;
+
         if (destClientCopy.pubKeyExists())
         {
             AESWrapper createSymKey{};

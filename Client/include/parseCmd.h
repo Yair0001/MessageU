@@ -42,6 +42,7 @@ private:
     std::vector<CryptoPP::byte> _privateKey; ///< Private key.
 
     bool _gotClientsList;
+    bool _hasAskedForSymKey;
 
 public:
     /**
@@ -73,7 +74,7 @@ public:
      * @brief Retrieves the public key of a client ID and returns the corresponding byte vector.
      * @return A vector of bytes representing the get public key command.
      */
-    std::vector<CryptoPP::byte> getPublicKeyOfCid();
+    std::vector<CryptoPP::byte> getPublicKeyOfCid(std::string name);
 
     /**
      * @brief Retrieves the waiting messages and returns the corresponding byte vector.

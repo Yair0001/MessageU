@@ -88,8 +88,9 @@ public:
      * @param msg The message content.
      * @param privateKey The private key for decryption.
      * @param clientList The bimap of client names and Client objects.
+     * @param hasAskedForSymKey User asked for sym key
      */
-    static void printMsg(const std::vector<CryptoPP::byte>& msg, RSAPrivateWrapper& privateKey, boost::bimap<std::string, Client>& clientList);
+    static void printMsg(const std::vector<CryptoPP::byte>& msg, RSAPrivateWrapper& privateKey, boost::bimap<std::string, Client>& clientList, bool& hasAskedForSymKey);
 };
 
 #endif //SERVERMSG_H

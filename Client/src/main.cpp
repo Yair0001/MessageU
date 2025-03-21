@@ -51,9 +51,6 @@ int main() {
         std::vector<CryptoPP::byte> retValue = client.parseCommand(cmd,gottenClientsList);
         ServerMsg ans(retValue);
 
-        // Print the response code
-        std::cout << bytesToType<int>(ans.getCode()) << "\n";
-
         if (bytesToType<int>(ans.getCode()) == 2101)
         {
             gottenClientsList = true;

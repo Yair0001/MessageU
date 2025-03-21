@@ -73,7 +73,7 @@ class ClientReq:
         protocol_format = f'!{const.CLIENT_ID_SIZE}s c I'
         msg_header_size = struct.calcsize(protocol_format)
         other_cid, self._msg_type, self._content_size = struct.unpack(protocol_format, self._payload[:msg_header_size])
-        self._msg_content = self._data[msg_header_size:]
+        self._msg_content = self._data[msg_header_size:msg_header_size+self._content_size]
 
         return self._db.add_new_message(self.get_client_id(),other_cid,self.get_msg_type(),self.get_msg_content())
 
@@ -90,12 +90,13 @@ class ClientReq:
         while res != const.ERROR_NO_WAITING_MSGS:
             # res is a tuple that contains FromClient cid, Message ID, Message Type, Message Content.
             # it is in this specific order
-            other_cid = struct.pack(f"!{const.CLIENT_ID_SIZE}s", res[0])
+            print(f"DEBUG: res = {res} (type: {type(res)})")
+            other_cid = struct.pack(f"!{const.CLIENT_ID_SIZE}s", bytes.fromhex(res[0]))
             msg_id = struct.pack("!I", res[1])
-            msg_type = struct.pack("!c", res[2])
-            msg_content = struct.pack(f"!{len(res[3])}s", res[3])
+            msg_type = struct.pack("!B", res[2])
+            msg_content = struct.pack(f"!{len(res[3])}s", res[3].encode())
 
-            msg_size = struct.pack("!I",const.CLIENT_ID_SIZE + const.MSG_ID_SIZE + const.MSG_TYPE_SIZE + len(msg_content))
+            msg_size = struct.pack("!I",len(msg_content))
             msgs_to_ret = other_cid + msg_id + msg_type + msg_size + msg_content
 
             res = self._db.get_top_msg_by_cid(self.get_client_id())

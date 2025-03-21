@@ -25,6 +25,8 @@ void Client::setPublicKey(const std::vector<CryptoPP::byte>& publicKey){
  */
 void Client::setSymKey(const std::vector<CryptoPP::byte>& symKey){
     _symKey = symKey;
+    _hasSymKey = true;
+
 }
 
 /**

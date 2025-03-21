@@ -27,6 +27,7 @@ private:
 
     bool _hasPublicKey = false; ///< Flag indicating if the public key is set.
     bool _hasSymKey = false; ///< Flag indicating if the symmetric key is set.
+    bool _hasAskedForSymKey = false;
 
 public:
     /**

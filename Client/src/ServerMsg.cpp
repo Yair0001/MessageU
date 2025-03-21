@@ -135,6 +135,10 @@ void ServerMsg::printError(const ServerMsg& ans) {
     {
         std::cerr << "NO_CLIENTS_LIST_ERROR" << std::endl;
     }
+    else if (code == ErrorCodes::NO_SYM_KEY_REQ_ERROR)
+    {
+        std::cerr << "NO_SYM_KEY_REQ_ERROR" << std::endl;
+    }
 }
 
 /**
@@ -176,6 +180,7 @@ void ServerMsg::printClientsList(const std::vector<std::vector<CryptoPP::byte>>&
 
         std::cout << "CLIENT " << i << " Name: " << bytesToString(currName) << std::endl;
         std::cout << "CLIENT " << i << " CID: " << bytesToHex(currCID) << std::endl;
+
         currName.clear();
     }
 }
@@ -185,8 +190,9 @@ void ServerMsg::printClientsList(const std::vector<std::vector<CryptoPP::byte>>&
  * @param msg The message content.
  * @param privateKey The private key for decryption.
  * @param clientList The bimap of client names and Client objects.
+ * @param hasAskedForSymKey has user asked for symkey
  */
-void ServerMsg::printMsg(const std::vector<CryptoPP::byte>& msg, RSAPrivateWrapper& privateKey, boost::bimap<std::string, Client>& clientList){
+void ServerMsg::printMsg(const std::vector<CryptoPP::byte>& msg, RSAPrivateWrapper& privateKey, boost::bimap<std::string, Client>& clientList, bool& hasAskedForSymKey){
     std::string usrName;
     std::vector<CryptoPP::byte> usrCid{};
     std::vector<CryptoPP::byte> msgId{};
@@ -203,6 +209,8 @@ void ServerMsg::printMsg(const std::vector<CryptoPP::byte>& msg, RSAPrivateWrapp
     }
 
     for (const auto& pair : clientList.right){
+        std::cout << bytesToHex(pair.first.getCid()) << std::endl;
+        std::cout << bytesToHex(usrCid) << std::endl;
         if (pair.first.getCid() == usrCid){
             usrName = pair.second;
         }
@@ -214,6 +222,7 @@ void ServerMsg::printMsg(const std::vector<CryptoPP::byte>& msg, RSAPrivateWrapp
             std::cout << "From: " << usrName << std::endl;
             std::cout << "Content:\n" << "Request for symmetric key\n";
             std::cout << "-----<EOM>-----\n";
+            auto curClient = clientList.left.find(usrName)->second;
         }
         else{
             std::cout << "Public key does not exist\n";
